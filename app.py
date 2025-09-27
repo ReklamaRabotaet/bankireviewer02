@@ -33,7 +33,8 @@ CATEGORY_TRANSLATIONS = {
     'remote_service': 'Дистанционное обслуживание',
     'other_individual': 'Другое (физ. лица)',
     'mobile_app': 'Мобильное приложение',
-    'individual_service': 'Обслуживание физ. лиц'
+    'individual_service': 'Обслуживание физ. лиц',
+    'service_individual': 'Обслуживание физических лиц'
 }
 
 def translate_category_name(category_name):
@@ -167,7 +168,8 @@ def create_mock_dashboard_data():
     categories = [
         'debet_cards', 'credit_cards', 'hypothec', 'auto_credit', 
         'consumer_credit', 'restructuring', 'deposits', 'money_transfer',
-        'remote_service', 'other_individual', 'mobile_app', 'individual_service'
+        'remote_service', 'other_individual', 'mobile_app', 'individual_service',
+        'service_individual'
     ]
     
     # Генерируем равное количество отзывов для каждой категории
