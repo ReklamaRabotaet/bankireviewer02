@@ -809,12 +809,9 @@
         </div>
         
         <div class="controls">
-            <div class="data-source-toggle">
-                <label class="toggle-label">
-                    <input type="checkbox" id="data-source-toggle" {{ 'checked' if stats.use_mock else '' }}>
-                    <span class="toggle-switch"></span>
-                    <span class="toggle-text">{{ 'Загруженные отзывы' if stats.use_mock else 'Реальные данные' }}</span>
-                </label>
+            <!-- Переключатель убран - всегда используем реальные данные -->
+            <div class="data-status">
+                <span class="data-status-text">📊 Реальные данные</span>
             </div>
             <!-- Скрытый input для загрузки JSON файла -->
             <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="handleFileUpload(event)">
@@ -870,11 +867,11 @@
                 <div class="mobile-nav-icon">Д</div>
                 <div>Дашборд</div>
             </a>
-            <a href="{{ '/reviews?use_mock=true' if stats.use_mock else '/reviews' }}" class="mobile-nav-item{% if request.endpoint == 'reviews' %} active{% endif %}">
+            <a href="/reviews" class="mobile-nav-item{% if request.endpoint == 'reviews' %} active{% endif %}">
                 <div class="mobile-nav-icon">О</div>
                 <div>Отзывы</div>
             </a>
-            <a href="{{ '/products?use_mock=true' if stats.use_mock else '/products' }}" class="mobile-nav-item{% if request.endpoint == 'products' %} active{% endif %}">
+            <a href="/products" class="mobile-nav-item{% if request.endpoint == 'products' %} active{% endif %}">
                 <div class="mobile-nav-icon">П</div>
                 <div>Продукты</div>
             </a>
@@ -1049,7 +1046,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2025 <a href="https://i.moscow/lct" style="color: inherit; text-decoration: none;">ЛЦТ Хакатон</a>, задача 6 от Газпромбанк Тех, команда "Сам решууууу" | Данные: {{ stats.total_reviews if stats.total_reviews > 0 else "—" }} отзывов {{ '(Загруженные)' if stats.use_mock else '(Реальные)' }}</p>
+            <p>&copy; 2025 <a href="https://i.moscow/lct" style="color: inherit; text-decoration: none;">ЛЦТ Хакатон</a>, задача 6 от Газпромбанк Тех, команда "Сам решууууу" | Данные: {{ stats.total_reviews if stats.total_reviews > 0 else "—" }} отзывов (Реальные данные)</p>
         </div>
     </footer>
     
@@ -1116,21 +1113,11 @@
             }
         }, 30000);
         
-        // Функция для переключения источника данных
-        document.getElementById('data-source-toggle').addEventListener('change', function() {
-            const useMock = this.checked;
-            const url = new URL(window.location);
-            url.searchParams.set('use_mock', useMock.toString());
-            window.location.href = url.toString();
-        });
+        // Mock переключатель убран - всегда используем реальные данные
         
-        // Функция навигации
+        // Функция навигации (всегда реальные данные)
         function navigateTo(path) {
-            const useMock = {{ 'true' if stats.use_mock else 'false' }};
             const url = new URL(path, window.location.origin);
-            if (useMock) {
-                url.searchParams.set('use_mock', 'true');
-            }
             window.location.href = url.toString();
         }
         
@@ -1350,8 +1337,8 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📊 Инициализация графиков...');
             try {
-                const useMock = window.location.search.includes('use_mock=true');
-                const apiUrl = useMock ? '/api/stats?use_mock=true' : '/api/stats';
+                // Всегда используем реальные данные из БД
+                const apiUrl = '/api/stats';
                 console.log('📡 Загружаем данные из:', apiUrl);
                 
                 const response = await fetch(apiUrl);

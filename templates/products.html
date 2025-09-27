@@ -196,14 +196,14 @@
             <h1>Продукты Газпромбанка</h1>
             <p>Анализ настроений по категориям продуктов</p>
         </div>
-        <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="back-btn">← Дашборд</a>
+        <a href="/" class="back-btn">← Дашборд</a>
     </div>
     
     <div class="main-content">
         <div class="stats-summary">
             <h2>🏷️ Статистика по продуктам</h2>
             <p>Всего отзывов: <strong>{{ stats.total_reviews }}</strong></p>
-            <p>Источник данных: <strong>{{ 'Mock данные' if stats.use_mock else 'Реальные отзывы' }}</strong></p>
+            <p>Источник данных: <strong>📊 Реальные данные</strong></p>
         </div>
         
         <div class="products-grid">
@@ -243,11 +243,11 @@
     <!-- Mobile Navigation -->
     <div class="mobile-nav">
         <div class="mobile-nav-items">
-            <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="mobile-nav-item">
+            <a href="/" class="mobile-nav-item">
                 <div class="mobile-nav-icon">📊</div>
                 <div>Дашборд</div>
             </a>
-            <a href="{{ '/reviews?use_mock=true' if stats.use_mock else '/reviews' }}" class="mobile-nav-item">
+            <a href="/reviews" class="mobile-nav-item">
                 <div class="mobile-nav-icon">💬</div>
                 <div>Отзывы</div>
             </a>
