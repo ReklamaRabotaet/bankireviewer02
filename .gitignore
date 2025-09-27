@@ -1,0 +1,39 @@
+# Большие CSV файлы данных (780 МБ)
+data/csv/*.csv
+data/csv/*.xlsx
+
+# Логи и временные файлы
+*.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Replit files
+.cache/
+.local/
+.pythonlibs/

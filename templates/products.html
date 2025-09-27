@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Продукты - Газпромбанк</title>
+    <style>
+        /* Пытаемся подключить фирменный шрифт Газпромбанка, с fallback на системные */
+        @font-face {
+            font-family: 'Gazprombank Sans Base';
+            src: local('Gazprombank Sans Base'), local('GazprombankSansBase'),
+                 url('https://www.gazprombank.ru/fonts/GazprombankSansBase.woff2') format('woff2'),
+                 url('https://www.gazprombank.ru/fonts/GazprombankSansBase.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        body { 
+            font-family: 'Gazprombank Sans Base', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); 
+            margin: 0; 
+            padding: 20px; 
+            color: #1a365d; 
+            min-height: 100vh; 
+        }
+        .header { 
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%); 
+            padding: 20px; 
+            border-radius: 16px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            color: white;
+            box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
+        }
+        .logo { 
+            width: 48px; 
+            height: 48px; 
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .back-btn { 
+            margin-left: auto; 
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%); 
+            color: white; 
+            padding: 12px 24px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+        }
+        .main-content { max-width: 1200px; margin: 0 auto; }
+        .stats-summary { 
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); 
+            padding: 20px; 
+            border-radius: 16px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+        }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .product-card { 
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 54, 93, 0.12);
+        }
+        .product-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .product-icon { 
+            width: 48px; 
+            height: 48px; 
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-right: 15px; 
+            font-size: 24px; 
+        }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .stat-label { color: #64748b; font-weight: 500; }
+        .stat-value { font-weight: bold; color: #1a365d; }
+        
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+            padding: 0.5rem;
+            box-shadow: 0 -4px 20px rgba(26, 54, 93, 0.15);
+            z-index: 1000;
+        }
+        
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            min-width: 44px;
+            font-size: 0.7rem;
+        }
+        
+        .mobile-nav-item.active,
+        .mobile-nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mobile-nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 767px) {
+            .mobile-nav {
+                display: block;
+            }
+            
+            .main-content {
+                padding: 0.75rem;
+                padding-bottom: 5rem;
+            }
+            
+            .header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .logo {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .back-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .stats-summary {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .product-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><img src="{{ url_for('static', filename='app_icon_1758974527304.webp') }}" alt="Газпромбанк" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+        <div>
+            <h1>Продукты Газпромбанка</h1>
+            <p>Анализ настроений по категориям продуктов</p>
+        </div>
+        <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="back-btn">← Дашборд</a>
+    </div>
+    
+    <div class="main-content">
+        <div class="stats-summary">
+            <h2>🏷️ Статистика по продуктам</h2>
+            <p>Всего отзывов: <strong>{{ stats.total_reviews }}</strong></p>
+            <p>Источник данных: <strong>{{ 'Mock данные' if stats.use_mock else 'Реальные отзывы' }}</strong></p>
+        </div>
+        
+        <div class="products-grid">
+            {% for category in stats.category_stats %}
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🏦</div>
+                    <div>
+                        <h3>{{ category.name }}</h3>
+                        <p>{{ category.total }} отзывов</p>
+                    </div>
+                </div>
+                
+                <div class="product-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Средний рейтинг:</span>
+                        <span class="stat-value">{{ category.avg_rating }} / 5.0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Позитивные:</span>
+                        <span class="stat-value">{{ category.positive }} отзывов</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Нейтральные:</span>
+                        <span class="stat-value">{{ category.neutral }} отзывов</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Негативные:</span>
+                        <span class="stat-value">{{ category.negative }} отзывов</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="mobile-nav-item">
+                <div class="mobile-nav-icon">📊</div>
+                <div>Дашборд</div>
+            </a>
+            <a href="{{ '/reviews?use_mock=true' if stats.use_mock else '/reviews' }}" class="mobile-nav-item">
+                <div class="mobile-nav-icon">💬</div>
+                <div>Отзывы</div>
+            </a>
+            <a href="#" class="mobile-nav-item active">
+                <div class="mobile-nav-icon">🏷️</div>
+                <div>Продукты</div>
+            </a>
+            <a href="#" class="mobile-nav-item">
+                <div class="mobile-nav-icon">⚙️</div>
+                <div>Настройки</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

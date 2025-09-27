@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Отзывы - Газпромбанк</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Пытаемся подключить фирменный шрифт Газпромбанка, с fallback на системные */
+        @font-face {
+            font-family: 'Gazprombank Sans Base';
+            src: local('Gazprombank Sans Base'), local('GazprombankSansBase'),
+                 url('https://www.gazprombank.ru/fonts/GazprombankSansBase.woff2') format('woff2'),
+                 url('https://www.gazprombank.ru/fonts/GazprombankSansBase.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        body {
+            font-family: 'Gazprombank Sans Base', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            color: #1a365d;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+        
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-info h1 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+        
+        .header-info p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+        
+        .back-btn {
+            margin-left: auto;
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .stats-summary {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .reviews-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            overflow: hidden;
+        }
+        
+        .reviews-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+        }
+        
+        .review-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 0.5rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(26, 54, 93, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        
+        .review-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 54, 93, 0.1);
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .review-rating {
+            display: flex;
+            gap: 0.25rem;
+            margin-right: 1rem;
+        }
+        
+        .star {
+            color: #fbbf24;
+            font-size: 1.2rem;
+        }
+        
+        .star.empty {
+            color: #e5e7eb;
+        }
+        
+        .review-date {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-left: auto;
+            font-weight: 500;
+        }
+        
+        .review-category {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            color: #1a365d;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-left: 1rem;
+            font-weight: 500;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+        
+        .review-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a365d;
+        }
+        
+        .review-text {
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+            padding: 0.5rem;
+            box-shadow: 0 -4px 20px rgba(26, 54, 93, 0.15);
+            z-index: 1000;
+        }
+        
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            min-width: 44px;
+            font-size: 0.7rem;
+        }
+        
+        .mobile-nav-item.active,
+        .mobile-nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mobile-nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 767px) {
+            .mobile-nav {
+                display: block;
+            }
+            
+            .main-content {
+                padding: 0.75rem;
+                padding-bottom: 5rem;
+            }
+            
+            .header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .logo {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .header-info h1 {
+                font-size: 1.2rem;
+            }
+            
+            .header-info p {
+                font-size: 0.8rem;
+            }
+            
+            .back-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .stats-summary {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .reviews-container {
+                margin-top: 1rem;
+            }
+            
+            .reviews-header {
+                padding: 1rem;
+            }
+            
+            .review-item {
+                padding: 1rem;
+                margin: 0.25rem;
+            }
+            
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .review-category {
+                margin-left: 0;
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><img src="{{ url_for('static', filename='app_icon_1758974527304.webp') }}" alt="Газпромбанк" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+        <div class="header-info">
+            <h1>Отзывы о Газпромбанке</h1>
+            <p>Последние отзывы клиентов банка</p>
+        </div>
+        <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="back-btn">
+            ← Вернуться к дашборду
+        </a>
+    </div>
+    
+    <div class="main-content">
+        <div class="stats-summary">
+            <h2>📊 Общая статистика</h2>
+            <p>Всего отзывов: <strong>{{ stats.total_reviews }}</strong></p>
+            <p>Источник данных: <strong>{{ 'Mock данные' if stats.use_mock else 'Реальные отзывы' }}</strong></p>
+        </div>
+        
+        <div class="reviews-container">
+            <div class="reviews-header">
+                <h3>💬 Последние отзывы (топ 20)</h3>
+            </div>
+            
+            {% for review in stats.recent_reviews %}
+            <div class="review-item">
+                <div class="review-header">
+                    <div class="review-rating">
+                        {% for i in range(5) %}
+                            <span class="star {{ 'empty' if i >= review.grade else '' }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <span class="review-category">{{ review.service_category }}</span>
+                    <span class="review-date">{{ review.dateCreate }}</span>
+                </div>
+                <div class="review-title">{{ review.title or 'Отзыв о банке' }}</div>
+                <div class="review-text">{{ review.text[:300] }}{% if review.text|length > 300 %}...{% endif %}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="mobile-nav-item">
+                <div class="mobile-nav-icon">📊</div>
+                <div>Дашборд</div>
+            </a>
+            <a href="#" class="mobile-nav-item active">
+                <div class="mobile-nav-icon">💬</div>
+                <div>Отзывы</div>
+            </a>
+            <a href="{{ '/products?use_mock=true' if stats.use_mock else '/products' }}" class="mobile-nav-item">
+                <div class="mobile-nav-icon">🏷️</div>
+                <div>Продукты</div>
+            </a>
+            <a href="#" class="mobile-nav-item">
+                <div class="mobile-nav-icon">⚙️</div>
+                <div>Настройки</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
