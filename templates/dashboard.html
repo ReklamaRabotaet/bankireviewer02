@@ -664,33 +664,46 @@
             white-space: nowrap;
         }
         
-        .period-buttons {
+        .period-selectors {
             display: flex;
-            gap: 0.5rem;
+            gap: 1rem;
             flex-wrap: wrap;
+            align-items: end;
         }
         
-        .period-btn {
-            padding: 0.5rem 1rem;
+        .selector-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 120px;
+        }
+        
+        .selector-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+        
+        .period-select {
+            padding: 0.5rem 0.75rem;
             border: 2px solid #e2e8f0;
             background: white;
-            color: #64748b;
+            color: #1a365d;
             border-radius: 6px;
-            cursor: pointer;
+            font-size: 0.9rem;
             font-weight: 500;
+            cursor: pointer;
             transition: all 0.2s ease;
-            white-space: nowrap;
         }
         
-        .period-btn:hover {
+        .period-select:hover {
             border-color: #2563eb;
-            color: #2563eb;
         }
         
-        .period-btn.active {
-            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
-            color: white;
+        .period-select:focus {
+            outline: none;
             border-color: #1a365d;
+            box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
         }
         
         /* Горизонтальная навигация в шапке */
@@ -831,11 +844,52 @@
     <div class="filters-panel">
         <div class="filter-section">
             <div class="filter-label">Период анализа:</div>
-            <div class="period-buttons">
-                <button class="period-btn" data-period="month">Месяц</button>
-                <button class="period-btn" data-period="3months">3 месяца</button>
-                <button class="period-btn" data-period="year">Год</button>
-                <button class="period-btn active" data-period="custom">Янв.24—Май.25</button>
+            <div class="period-selectors">
+                <div class="selector-group">
+                    <label for="month-select">Месяц:</label>
+                    <select id="month-select" class="period-select">
+                        <option value="">Все месяцы</option>
+                        <option value="2024-01">Янв 2024</option>
+                        <option value="2024-02">Фев 2024</option>
+                        <option value="2024-03">Мар 2024</option>
+                        <option value="2024-04">Апр 2024</option>
+                        <option value="2024-05">Май 2024</option>
+                        <option value="2024-06">Июн 2024</option>
+                        <option value="2024-07">Июл 2024</option>
+                        <option value="2024-08">Авг 2024</option>
+                        <option value="2024-09">Сен 2024</option>
+                        <option value="2024-10">Окт 2024</option>
+                        <option value="2024-11">Ноя 2024</option>
+                        <option value="2024-12">Дек 2024</option>
+                        <option value="2025-01">Янв 2025</option>
+                        <option value="2025-02">Фев 2025</option>
+                        <option value="2025-03">Мар 2025</option>
+                        <option value="2025-04">Апр 2025</option>
+                        <option value="2025-05">Май 2025</option>
+                    </select>
+                </div>
+                
+                <div class="selector-group">
+                    <label for="year-select">Год:</label>
+                    <select id="year-select" class="period-select">
+                        <option value="">Все годы</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                
+                <div class="selector-group">
+                    <label for="quarter-select">Квартал:</label>
+                    <select id="quarter-select" class="period-select">
+                        <option value="">Все кварталы</option>
+                        <option value="2024-Q1">I кв. 24</option>
+                        <option value="2024-Q2">II кв. 24</option>
+                        <option value="2024-Q3">III кв. 24</option>
+                        <option value="2024-Q4">IV кв. 24</option>
+                        <option value="2025-Q1">I кв. 25</option>
+                        <option value="2025-Q2">II кв. 25</option>
+                    </select>
+                </div>
             </div>
         </div>
         
@@ -1396,21 +1450,7 @@
             updateVolumeChart(filteredData);
         }
 
-        // Функциональность кнопок выбора периода
-        document.querySelectorAll('.period-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Убираем активное состояние у всех кнопок
-                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-                // Добавляем активное состояние к нажатой кнопке
-                this.classList.add('active');
-                
-                const period = this.dataset.period;
-                console.log('📅 Выбран период:', period);
-                
-                // Фильтруем данные и обновляем графики
-                filterDataByPeriod(period);
-            });
-        });
+        // Старые кнопки period-btn заменены на dropdown селекторы
         
         // Функция обработки загруженного JSON файла
         async function handleFileUpload(event) {
@@ -1692,33 +1732,134 @@
             }
         }
         
-        // Функция обработки кнопок периода анализа
-        function handlePeriodChange(period) {
-            console.log('📅 Изменение периода анализа:', period);
-            
-            // Обновляем активную кнопку
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-period="${period}"]`).classList.add('active');
-            
-            // Здесь можно добавить логику изменения периода данных
-            console.log('📊 Период изменен на:', period);
-        }
-        
-        // Инициализация обработчиков для кнопок периода
+        // Старые period-btn обработчики заменены на dropdown селекторы
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const period = this.getAttribute('data-period');
-                    handlePeriodChange(period);
-                });
-            });
-            
             // Инициализация скрытия лишних чипсов
             toggleAllProducts();
             toggleAllProducts(); // Двойной вызов чтобы привести в исходное состояние
         });
+        
+        // Функции фильтрации данных по выбранному периоду
+        function filterDataByMonth(selectedMonth) {
+            if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
+                console.warn('⚠️ Нет данных для фильтрации по месяцу');
+                return;
+            }
+            
+            const filteredData = cachedMonthlyStats.filter(item => item.month === selectedMonth);
+            console.log(`📅 Отфильтровано по месяцу ${selectedMonth}:`, filteredData.length, 'записей');
+            
+            updateTrendsChart(filteredData);
+            updateVolumeChart(filteredData);
+        }
+        
+        function filterDataByYear(selectedYear) {
+            if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
+                console.warn('⚠️ Нет данных для фильтрации по году');
+                return;
+            }
+            
+            const filteredData = cachedMonthlyStats.filter(item => item.month.startsWith(selectedYear));
+            console.log(`📅 Отфильтровано по году ${selectedYear}:`, filteredData.length, 'записей');
+            
+            updateTrendsChart(filteredData);
+            updateVolumeChart(filteredData);
+        }
+        
+        function filterDataByQuarter(selectedQuarter) {
+            if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
+                console.warn('⚠️ Нет данных для фильтрации по кварталу');
+                return;
+            }
+            
+            // Преобразуем квартал в месяцы (например, 2024-Q1 -> [2024-01, 2024-02, 2024-03])
+            const [year, quarter] = selectedQuarter.split('-');
+            let months = [];
+            
+            switch(quarter) {
+                case 'Q1':
+                    months = [`${year}-01`, `${year}-02`, `${year}-03`];
+                    break;
+                case 'Q2':
+                    months = [`${year}-04`, `${year}-05`, `${year}-06`];
+                    break;
+                case 'Q3':
+                    months = [`${year}-07`, `${year}-08`, `${year}-09`];
+                    break;
+                case 'Q4':
+                    months = [`${year}-10`, `${year}-11`, `${year}-12`];
+                    break;
+            }
+            
+            const filteredData = cachedMonthlyStats.filter(item => months.includes(item.month));
+            console.log(`📅 Отфильтровано по кварталу ${selectedQuarter}:`, filteredData.length, 'записей');
+            
+            updateTrendsChart(filteredData);
+            updateVolumeChart(filteredData);
+        }
+        
+        function resetToAllData() {
+            console.log('📅 Сброс фильтров - показать все данные');
+            if (cachedMonthlyStats && cachedMonthlyStats.length > 0) {
+                updateTrendsChart(cachedMonthlyStats);
+                updateVolumeChart(cachedMonthlyStats);
+            }
+        }
+        
+        // Обработчики для выпадающих списков
+        document.addEventListener('DOMContentLoaded', function() {
+            // Месяц
+            const monthSelect = document.getElementById('month-select');
+            if (monthSelect) {
+                monthSelect.addEventListener('change', function() {
+                    const selectedMonth = this.value;
+                    console.log('📅 Выбран месяц:', selectedMonth);
+                    if (selectedMonth) {
+                        filterDataByMonth(selectedMonth);
+                        // Сброс других фильтров
+                        document.getElementById('year-select').value = '';
+                        document.getElementById('quarter-select').value = '';
+                    } else {
+                        resetToAllData();
+                    }
+                });
+            }
+            
+            // Год
+            const yearSelect = document.getElementById('year-select');
+            if (yearSelect) {
+                yearSelect.addEventListener('change', function() {
+                    const selectedYear = this.value;
+                    console.log('📅 Выбран год:', selectedYear);
+                    if (selectedYear) {
+                        filterDataByYear(selectedYear);
+                        // Сброс других фильтров
+                        document.getElementById('month-select').value = '';
+                        document.getElementById('quarter-select').value = '';
+                    } else {
+                        resetToAllData();
+                    }
+                });
+            }
+            
+            // Квартал
+            const quarterSelect = document.getElementById('quarter-select');
+            if (quarterSelect) {
+                quarterSelect.addEventListener('change', function() {
+                    const selectedQuarter = this.value;
+                    console.log('📅 Выбран квартал:', selectedQuarter);
+                    if (selectedQuarter) {
+                        filterDataByQuarter(selectedQuarter);
+                        // Сброс других фильтров
+                        document.getElementById('month-select').value = '';
+                        document.getElementById('year-select').value = '';
+                    } else {
+                        resetToAllData();
+                    }
+                });
+            }
+        });
+
     </script>
 </body>
 </html>
