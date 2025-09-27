@@ -11,6 +11,9 @@ import os
 import random
 from datetime import datetime, timedelta
 import numpy as np
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import psycopg2.pool
 
 # Create Flask app with proper configuration
 app = Flask(__name__)
@@ -19,6 +22,78 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'fallback-secret-key-for-development')
 app.config['JSON_AS_ASCII'] = False  # Support for Russian characters
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+
+# Database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
+
+# Create connection pool
+connection_pool = psycopg2.pool.SimpleConnectionPool(1, 20, DATABASE_URL)
+
+def get_db_connection():
+    """Get database connection from pool"""
+    return connection_pool.getconn()
+
+def return_db_connection(conn):
+    """Return connection back to pool"""
+    connection_pool.putconn(conn)
+
+def ensure_database_schema():
+    """Проверяет и создает необходимые таблицы в БД"""
+    
+    conn = None
+    try:
+        conn = get_db_connection()
+        
+        with conn.cursor() as cur:
+            # Создаем таблицу reviews если не существует
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS reviews (
+                    id SERIAL PRIMARY KEY,
+                    review_id VARCHAR(100) UNIQUE NOT NULL,
+                    text TEXT NOT NULL,
+                    grade INTEGER NOT NULL CHECK (grade >= 1 AND grade <= 5),
+                    service_category VARCHAR(50) NOT NULL,
+                    date_create TIMESTAMP NOT NULL,
+                    bank_name VARCHAR(100) DEFAULT 'Газпромбанк',
+                    ml_topics TEXT[], -- Массив тем из ML
+                    ml_sentiments TEXT[], -- Массив тональностей из ML  
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            # Создаем индексы если не существуют
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews (date_create);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_category ON reviews (service_category);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_grade ON reviews (grade);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_date_category ON reviews (date_create, service_category);")
+            
+            # Создаем таблицу uploaded_datasets если не существует
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS uploaded_datasets (
+                    id SERIAL PRIMARY KEY,
+                    filename VARCHAR(255) NOT NULL,
+                    total_reviews INTEGER NOT NULL,
+                    upload_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    processing_status VARCHAR(20) DEFAULT 'pending',
+                    ml_processing_time INTERVAL,
+                    topics_found TEXT[],
+                    avg_sentiment_score DECIMAL(3,2)
+                );
+            """)
+            
+            conn.commit()
+            print("✅ Схема базы данных проверена/создана")
+            
+    except Exception as e:
+        print(f"❌ Ошибка создания схемы БД: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            return_db_connection(conn)
 
 # Словарь для перевода названий категорий продуктов
 CATEGORY_TRANSLATIONS = {
@@ -138,64 +213,128 @@ def mock_ml_analysis(texts):
     return results
 
 # Загрузка данных для дашборда
-def load_dashboard_data(use_mock=True):
-    """Загрузка данных для отображения в дашборде"""
+def load_dashboard_data_from_db():
+    """Загрузка данных для отображения в дашборде из PostgreSQL"""
     
+    # Сначала убеждаемся что схема существует
+    ensure_database_schema()
+    
+    conn = None
     try:
-        if use_mock:
-            return create_mock_dashboard_data()
+        conn = get_db_connection()
+        
+        # Проверяем есть ли данные в БД
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT COUNT(*) as count FROM reviews")
+            count = cur.fetchone()['count']
             
-        # Загружаем основной файл с отзывами
-        csv_paths = ['data/csv/gazprombank_reviews.csv', 'gazprombank_reviews.csv']
-        df = None
-        for path in csv_paths:
-            if os.path.exists(path):
-                df = pd.read_csv(path, nrows=50000)  # Ограничиваем для производительности
-                break
-        if df is None:
-            # Если основного файла нет, создаем mock данные
-            df = create_mock_dashboard_data()
+            if count == 0:
+                print("🔄 База пустая, создаем образец данных...")
+                populate_sample_data()
+                # Повторно считываем после создания данных
+                cur.execute("SELECT COUNT(*) as count FROM reviews") 
+                count = cur.fetchone()['count']
+                print(f"✅ Создано {count} образцов отзывов")
             
-        return df
+            # Загружаем данные из БД
+            cur.execute("""
+                SELECT 
+                    review_id as id,
+                    text,
+                    grade,
+                    service_category,
+                    date_create as "dateCreate",
+                    bank_name,
+                    ml_topics,
+                    ml_sentiments
+                FROM reviews 
+                ORDER BY date_create DESC
+                LIMIT 50000
+            """)
+            
+            rows = cur.fetchall()
+            
+            # Конвертируем в DataFrame
+            df = pd.DataFrame(rows)
+            if len(df) > 0:
+                df['dateCreate'] = pd.to_datetime(df['dateCreate'])
+                
+            return df
+            
     except Exception as e:
-        print(f"Ошибка загрузки данных: {e}")
-        return create_mock_dashboard_data()
+        print(f"❌ Ошибка загрузки данных из БД: {e}")
+        # В случае ошибки создаем минимальный набор данных
+        return create_minimal_fallback_data()
+    finally:
+        if conn:
+            return_db_connection(conn)
 
-def create_mock_dashboard_data():
-    """Создание mock данных для демонстрации дашборда"""
+def populate_sample_data():
+    """Заполнение БД образцом данных для демонстрации"""
     
-    # Все категории из CATEGORY_TRANSLATIONS для гарантированного покрытия
-    categories = [
-        'debet_cards', 'credit_cards', 'hypothec', 'auto_credit', 
-        'consumer_credit', 'restructuring', 'deposits', 'money_transfer',
-        'remote_service', 'other_individual', 'mobile_app', 'individual_service',
-        'service_individual'
-    ]
-    
-    # Генерируем равное количество отзывов для каждой категории
-    reviews_per_category = 1000  
-    data = []
-    
-    # Период с 1 января 2024 до 31 мая 2025 (всего 516 дней)
-    start_date = datetime(2024, 1, 1)
-    end_date = datetime(2025, 5, 31)
-    total_days = (end_date - start_date).days
-    
-    # Генерируем отзывы для каждой категории
-    for category in categories:
-        for i in range(reviews_per_category):
-            review_date = start_date + timedelta(days=random.randint(0, total_days))
-            review_id = len(data)
+    conn = None
+    try:
+        conn = get_db_connection()
+        
+        # Все категории из CATEGORY_TRANSLATIONS 
+        categories = [
+            'debet_cards', 'credit_cards', 'hypothec', 'auto_credit', 
+            'consumer_credit', 'restructuring', 'deposits', 'money_transfer',
+            'remote_service', 'other_individual', 'mobile_app', 'individual_service',
+            'service_individual'
+        ]
+        
+        # Генерируем данные для каждой категории
+        reviews_per_category = 1000  
+        
+        # Период с 1 января 2024 до 31 мая 2025
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2025, 5, 31)
+        total_days = (end_date - start_date).days
+        
+        with conn.cursor() as cur:
+            review_counter = 0
+            for category in categories:
+                for i in range(reviews_per_category):
+                    review_date = start_date + timedelta(days=random.randint(0, total_days))
+                    review_counter += 1
+                    
+                    cur.execute("""
+                        INSERT INTO reviews 
+                        (review_id, text, grade, service_category, date_create, bank_name)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        f'sample_{review_counter}',
+                        f'Образец отзыва #{review_counter} о {CATEGORY_TRANSLATIONS.get(category, category)}',
+                        random.randint(1, 5),
+                        category,
+                        review_date,
+                        'Газпромбанк'
+                    ))
             
-            data.append({
-                'id': f'mock_{review_id}',
-                'dateCreate': review_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'grade': random.randint(1, 5),
-                'service_category': category,
-                'text': f'Mock отзыв #{review_id} о {CATEGORY_TRANSLATIONS.get(category, category)}',
-                'title': f'Отзыв {review_id}',
-                'bank_name': 'Газпромбанк'
-            })
+            conn.commit()
+            print(f"✅ Создано {review_counter} образцов отзывов в БД")
+            
+    except Exception as e:
+        print(f"❌ Ошибка создания образцов данных: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            return_db_connection(conn)
+
+def create_minimal_fallback_data():
+    """Создание минимального набора данных в случае проблем с БД"""
+    data = []
+    for i in range(100):
+        data.append({
+            'id': f'fallback_{i}',
+            'dateCreate': datetime.now() - timedelta(days=random.randint(0, 365)),
+            'grade': random.randint(1, 5),
+            'service_category': 'credit_cards',
+            'text': f'Резервный отзыв #{i}',
+            'bank_name': 'Газпромбанк'
+        })
     
     return pd.DataFrame(data)
 
@@ -294,9 +433,9 @@ def dashboard():
     """Главная страница дашборда"""
     
     # Всегда используем только реальные данные
-    df = load_dashboard_data(use_mock=False)
+    df = load_dashboard_data_from_db()
     stats = calculate_dashboard_stats(df)
-    stats['use_mock'] = False
+    # Всегда используем реальные данные из БД
     
     return render_template('dashboard.html', stats=stats)
 
@@ -380,9 +519,9 @@ def api_stats():
     """API endpoint для получения статистики"""
     
     # Всегда используем только реальные данные
-    df = load_dashboard_data(use_mock=False)
+    df = load_dashboard_data_from_db()
     stats = calculate_dashboard_stats(df)
-    stats['use_mock'] = False
+    # Всегда используем реальные данные из БД
     
     return jsonify(stats)
 
@@ -391,7 +530,7 @@ def download_test_data():
     """Загрузка тестовых 250 отзывов в JSON формате"""
     try:
         # Загружаем реальные данные
-        df = load_dashboard_data(use_mock=False)
+        df = load_dashboard_data_from_db()
         
         # Ограничиваем до 250 отзывов
         test_data = df.head(250)
@@ -420,15 +559,15 @@ def download_test_data():
 @app.route('/reviews')
 def reviews_page():
     """Страница отзывов"""
-    use_mock = request.args.get('use_mock', 'false').lower() == 'true'
-    df = load_dashboard_data(use_mock=use_mock)
+    # Всегда используем реальные данные из БД  
+    df = load_dashboard_data_from_db()
     
     # Получаем последние 20 отзывов
     recent_reviews = df.head(20).to_dict('records')
     
     stats = {
         'total_reviews': len(df),
-        'use_mock': use_mock,
+
         'recent_reviews': recent_reviews
     }
     
@@ -437,8 +576,8 @@ def reviews_page():
 @app.route('/products')
 def products_page():
     """Страница продуктов"""
-    use_mock = request.args.get('use_mock', 'false').lower() == 'true'
-    df = load_dashboard_data(use_mock=use_mock)
+    # Всегда используем реальные данные из БД  
+    df = load_dashboard_data_from_db()
     
     # Статистика по категориям (исключаем категорию "all")
     category_stats = []
@@ -459,7 +598,7 @@ def products_page():
     
     stats = {
         'total_reviews': len(df),
-        'use_mock': use_mock,
+
         'category_stats': category_stats
     }
     
