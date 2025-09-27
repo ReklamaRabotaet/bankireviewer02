@@ -302,7 +302,7 @@
             <h1>Отзывы о Газпромбанке</h1>
             <p>Последние отзывы клиентов банка</p>
         </div>
-        <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="back-btn">
+        <a href="/" class="back-btn">
             ← Вернуться к дашборду
         </a>
     </div>
@@ -311,7 +311,7 @@
         <div class="stats-summary">
             <h2>📊 Общая статистика</h2>
             <p>Всего отзывов: <strong>{{ stats.total_reviews }}</strong></p>
-            <p>Источник данных: <strong>{{ 'Mock данные' if stats.use_mock else 'Реальные отзывы' }}</strong></p>
+            <p>Источник данных: <strong>📊 Реальные данные</strong></p>
         </div>
         
         <div class="reviews-container">
@@ -340,7 +340,7 @@
     <!-- Mobile Navigation -->
     <div class="mobile-nav">
         <div class="mobile-nav-items">
-            <a href="{{ '/?use_mock=true' if stats.use_mock else '/' }}" class="mobile-nav-item">
+            <a href="/" class="mobile-nav-item">
                 <div class="mobile-nav-icon">📊</div>
                 <div>Дашборд</div>
             </a>
@@ -348,7 +348,7 @@
                 <div class="mobile-nav-icon">💬</div>
                 <div>Отзывы</div>
             </a>
-            <a href="{{ '/products?use_mock=true' if stats.use_mock else '/products' }}" class="mobile-nav-item">
+            <a href="/products" class="mobile-nav-item">
                 <div class="mobile-nav-icon">🏷️</div>
                 <div>Продукты</div>
             </a>
