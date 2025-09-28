@@ -1,0 +1,380 @@
+Отлично — сделал глубокое, прикладной code-review с фокусом на **производительность**, масштабируемость и устранение ошибок, которые, судя по коду, дают задержки ~5s при фильтрации и приводят к тому, что часть данных в дэшборде — «жёстко» (hard-coded) или не обновляется. Я ссылаюсь на ваш файл приложения app.py при приведении конкретных мест и примеров. 
+
+Ниже — структурированный план: **1) что именно тормозит и где ошибки**, **2) быстрые исправления (low-effort, big win)**, **3) архитектурные улучшения (medium/long-term)**, **4) конкретные патчи/SQL/фрагменты кода, которые можно вставить прямо в проект** и **5) проверки / профилирование**.
+
+---
+
+# 1) Ключевые проблемы в текущем коде (быстрое резюме)
+
+* Вы загружаете **всю таблицу reviews в память** (Pandas DataFrame) и затем делаете все фильтрации / агрегации в Python/Pandas — при объёмах БД ~350MB это дорого по памяти и CPU; нагрузка растёт при параллельных запросах. 
+* Кеш `_data_cache` хранит **весь DataFrame**, а не агрегированные результаты, и общий — без ключей для параметров фильтрации (product, period). При запросе с фильтрами кеш почти бесполезен. 
+* `get_product_classes()` делает SQL-запрос каждый раз при вызове. В коде оно вызывается часто внутри циклов (например при формировании category/monthly stats) — это лишние запросы. 
+* В `calculate_dashboard_stats()` смешаны несколько багов/неточностей:
+
+  * Ветка фильтра `product_filter` пытается перевести ключ в «русское имя» (`russian_name`) и затем фильтровать `filtered_df['service_category'] == russian_name`. Скорее всего `service_category` в БД хранит английские ключи (или наоборот) — это даёт **пустые фильтры** (frontend показывает странные/жёстко заданные значения). Это объясняет поведение «не все данные обновляются» и "hard code" наблюдения. 
+  * Много `df.copy()` и повторных `pd.to_datetime`/созданий колонки `date` в циклах — лишняя аллокация памяти и CPU.
+  * Для category и monthly stats используются вложенные Python-циклы с множественными фильтрациями `df[df['service_category'] == category]` — O(N * M) по фильтрам и месяцам.
+* `connection_pool = psycopg2.pool.SimpleConnectionPool(1, 20, DATABASE_URL)` — верхний предел 20 соединений может быть слишком большим для Replit Autoscale (4 vCPU / 8 GiB). Большой пул при большом объёме операций повышает конкуренцию и overhead. 
+* ML endpoint использует `signal.alarm` и heavy imports inside route — рискованно для некоторых WSGI workers и неэффективно (импорт внутри обработчика). 
+
+---
+
+# 2) Быстрые исправления (low-effort, быстрый выигрыш)
+
+Эти правки можно сделать быстро и заметно снизят задержки.
+
+## 2.1 Кешировать агрегированные результаты, а не весь DataFrame
+
+* Вместо кеширования `df` (весь набор) — кэшируйте результаты `calculate_dashboard_stats()` **по ключу** `(product_filter, period_filter)`. Например: `_agg_cache = { key: (timestamp, json_result) }`.
+* Увеличьте дефолт `cache_duration` на 300s или 600s для дэшборда (в хакатоне latency важнее «свежести каждую секунду»).
+
+**Почему:** при фильтре пользователь получает предсказуемую агрегацию — её выгодно держать в памяти. Хранение JSON (несколько KB–MB), а не DataFrame (сотни MB), значительно экономит RAM.
+
+## 2.2 Кешировать результат get_product_classes() длительнее
+
+Добавьте `@lru_cache(maxsize=1)` или держите результат в переменной и обновляйте раз в N минут — сейчас функция выполняет SQL каждый раз. Это особенно важно, т.к. `product_classes` вызывается в циклах. 
+
+## 2.3 Исправить неверную фильтрацию product → service_category
+
+В `calculate_dashboard_stats()` вы берёте `product_filter` и переводите его в `russian_name`, затем фильтруете по `service_category == russian_name`. Нужно согласовать формат: либо делайте фильтр по **ключу** (англ.) либо по **label_ru**, но консистентно. Чаще правильный путь — хранить в БД **ключи** (`service_category = 'debet_cards'`) и переводить label только на фронте. Исправление: фильтровать по ключу, а не по переводу. 
+
+## 2.4 Снизить количество вызовов get_db_connection / putconn
+
+В функциях, где делаете 2–3 запроса подряд — берите одно соединение и используйте его; не берите/возвращайте соединение в каждой мелкой функции. Проверяйте, что `return_db_connection` вызывается в `finally`.
+
+## 2.5 SQL-агрегации вместо циклов pandas
+
+Самый большой выигрыш: переместите агрегаты (counts, positive/neutral/negative percents, monthly counts per category) в SQL (GROUP BY date_trunc('month', date_create), service_category) — Postgres делает это быстро, использует индексы и не требует загрузки всех строк в RAM.
+
+---
+
+# 3) Архитектурные / среднесрочные улучшения
+
+Эти шаги займут больше времени, но дадут устойчивый прирост.
+
+## 3.1 Серверные агрегаты / materialized views
+
+Создайте materialized view(ы) для:
+
+* `monthly_category_aggregates`: `SELECT date_trunc('month', date_create) AS month, service_category, count(*) as total, sum(case when grade >=4 then 1 else 0 end) as positive, ... GROUP BY 1,2;`
+* `category_totals` — общий счет по категориям.
+  Рефрешить материализованные представления раз в N минут/по событию загрузки.
+
+**Почему:** при больших данных агрегации один раз в БД гораздо дешевле, чем пересчитывать каждый запрос.
+
+## 3.2 Redis / in-memory key-value cache (если доступен)
+
+Replit может позволить внешний Redis — там удобно кэшировать JSON-ответы API и invalidation при загрузке данных.
+
+## 3.3 Пагинация и "lazy" загрузка отзывов
+
+Для страницы `/reviews` не вычитывайте `df.head(20)` из 100k строк в памяти. Делайте `SELECT ... ORDER BY date_create DESC LIMIT 20` в SQL. Сейчас вы берёте весь DataFrame и потом head(20). 
+
+## 3.4 Индексы и GIN
+
+* Для поиска по тексту — `CREATE INDEX ON reviews USING gin (to_tsvector('russian', text));`
+* Для массивов `ml_topics`/`ml_sentiments` — `CREATE INDEX ON reviews USING gin (ml_topics);`
+* Проверить, есть ли нужные индекс(ы) по `date_create`, `service_category` и составные индексы `(service_category, date_create)` — часть уже создаётся в схеме; но нужно убедиться, что типы совпадают и индексы покрывают запросы. 
+
+## 3.5 Ограничьте пул соединений под ресурс Replit
+
+Ставьте `SimpleConnectionPool(1, 8)` или `1..max_connections` не выше 8. Меньше соединений снижает contention и уровень параллелизма, но Replit с 4 vCPU/8GB не потянет 20 активных BD соединений при heavy queries. 
+
+## 3.6 Отказ от pandas для простых агрегатов в API
+
+Pandas отлично для анализа, но в веб-контексте для агрегаций быстрее — SQL. Оставьте pandas только для офлайн/эксперимента; API возвращает агрегированные JSON прямо из SQL.
+
+---
+
+# 4) Конкретные патчи / примеры кода (можно вставить прямо)
+
+Ниже — набор готовых фрагментов. Я прокомментировал, куда вставлять (вместо текущих тяжёлых кусков). Все изменения опираются на ваш app.py. 
+
+## 4.1 Кеширование get_product_classes()
+
+Вверху файла добавьте:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_product_classes_cached():
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT class_name, class_label_ru, description, total_reviews 
+                FROM classes 
+                ORDER BY total_reviews DESC
+            """)
+            rows = cur.fetchall()
+            return {row['class_name']: row['class_label_ru'] for row in rows}
+    except Exception as e:
+        print("❌ Ошибка получения классов продуктов (cached):", e)
+        # fallback как ранее
+        return {...}  # ваш fallback
+    finally:
+        if conn:
+            return_db_connection(conn)
+```
+
+Затем **заменить** все вызовы `get_product_classes()` на `get_product_classes_cached()`. Это сразу уберёт множественные SQL запросы. 
+
+---
+
+## 4.2 Перенос агрегатов в SQL (пример для `/api/stats`)
+
+Ниже — пример функции, которая вычисляет основные метрики прямо в Postgres и возвращает JSON. Вставьте вместо текущего `calculate_dashboard_stats()` вызова в `/api/stats` или используйте как дополнительный путь.
+
+```python
+def sql_calculate_stats(product_filter=None, period_filter=None):
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            where_clauses = []
+            params = []
+
+            if product_filter and product_filter != 'all':
+                # предполагаем, что service_category хранит ключ (например 'debet_cards')
+                where_clauses.append("service_category = %s")
+                params.append(product_filter)
+
+            # period_filter обработка: YYYY, YYYY-MM, YYYY-QX
+            if period_filter:
+                if len(period_filter) == 4:
+                    where_clauses.append("EXTRACT(YEAR FROM date_create) = %s")
+                    params.append(int(period_filter))
+                elif len(period_filter) == 7:  # YYYY-MM
+                    year, month = period_filter.split('-')
+                    where_clauses.append("date_trunc('month', date_create) = date_trunc('month', to_date(%s, 'YYYY-MM'))")
+                    params.append(period_filter)
+                elif '-Q' in period_filter:
+                    year, q = period_filter.split('-Q')
+                    q = int(q)
+                    months = {
+                        1: (1,3), 2: (4,6), 3: (7,9), 4: (10,12)
+                    }[q]
+                    where_clauses.append("date_part('year', date_create) = %s AND date_part('month', date_create) BETWEEN %s AND %s")
+                    params.extend([int(year), months[0], months[1]])
+
+            where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+            # main totals and percents
+            cur.execute(f"""
+                SELECT 
+                    count(*) as total_reviews,
+                    sum(case when grade >= 4 then 1 else 0 end) as positive_count,
+                    sum(case when grade = 3 then 1 else 0 end) as neutral_count,
+                    sum(case when grade <= 2 then 1 else 0 end) as negative_count,
+                    avg(grade)::numeric(5,2) as avg_rating
+                FROM reviews
+                {where_sql};
+            """, params)
+            totals = cur.fetchone()
+
+            total = totals['total_reviews'] or 0
+            positive_pct = (totals['positive_count'] / total * 100) if total else 0
+            neutral_pct = (totals['neutral_count'] / total * 100) if total else 0
+            negative_pct = (totals['negative_count'] / total * 100) if total else 0
+
+            # categories aggregation (top N)
+            cur.execute(f"""
+                SELECT service_category, count(*) as total,
+                       sum(case when grade >=4 then 1 else 0 end) as positive,
+                       sum(case when grade =3 then 1 else 0 end) as neutral,
+                       sum(case when grade <=2 then 1 else 0 end) as negative,
+                       avg(grade)::numeric(3,1) as avg_rating
+                FROM reviews
+                {where_sql}
+                GROUP BY service_category
+                ORDER BY total DESC
+                LIMIT 100;
+            """, params)
+            categories = cur.fetchall()
+
+            # monthly aggregates (last N months or full range)
+            cur.execute(f"""
+                SELECT to_char(date_trunc('month', date_create),'YYYY-MM') as month,
+                       count(*) as total,
+                       sum(case when grade >=4 then 1 else 0 end) as positive,
+                       sum(case when grade =3 then 1 else 0 end) as neutral,
+                       sum(case when grade <=2 then 1 else 0 end) as negative
+                FROM reviews
+                {where_sql}
+                GROUP BY 1
+                ORDER BY 1;
+            """, params)
+            monthly = cur.fetchall()
+
+            # build result
+            result = {
+                'total_reviews': total,
+                'positive_percent': round(positive_pct,1),
+                'neutral_percent': round(neutral_pct,1),
+                'negative_percent': round(negative_pct,1),
+                'category_stats': [
+                    {
+                        'category_key': r['service_category'],
+                        'total': r['total'],
+                        'positive': round(r['positive']/r['total']*100,1) if r['total'] else 0,
+                        'neutral': round(r['neutral']/r['total']*100,1) if r['total'] else 0,
+                        'negative': round(r['negative']/r['total']*100,1) if r['total'] else 0,
+                        'avg_rating': float(r['avg_rating'])
+                    } for r in categories
+                ],
+                'monthly_stats': [
+                    {
+                        'month': r['month'],
+                        'total': r['total'],
+                        'positive': r['positive'],
+                        'neutral': r['neutral'],
+                        'negative': r['negative']
+                    } for r in monthly
+                ]
+            }
+            return result
+    finally:
+        if conn:
+            return_db_connection(conn)
+```
+
+**Преимущество:** это снимет нагрузку с Python/pandas и даст ответ в десятки/сотни миллисекунд при наличии индексов.
+
+---
+
+## 4.3 Пример: кэш результата по ключу фильтра
+
+Добавьте глобально:
+
+```python
+_agg_cache = {}  # key -> (timestamp, result)
+CACHE_TTL = 300  # seconds
+```
+
+В `/api/stats`:
+
+```python
+key = f"stats:{product_filter}:{period_filter}"
+cached = _agg_cache.get(key)
+if cached and time.time() - cached[0] < CACHE_TTL:
+    return jsonify(cached[1])
+
+# иначе считаем через SQL
+stats = sql_calculate_stats(product_filter, period_filter)
+_agg_cache[key] = (time.time(), stats)
+return jsonify(stats)
+```
+
+---
+
+## 4.4 Минимизировать загрузку отзывов в /reviews
+
+Замените:
+
+```python
+df = load_dashboard_data_from_db()
+recent_reviews = df.head(20).to_dict('records')
+```
+
+На:
+
+```python
+def get_recent_reviews(limit=20):
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT review_id as id, text, grade, service_category, date_create, bank_name
+                FROM reviews
+                ORDER BY date_create DESC
+                LIMIT %s
+            """, (limit,))
+            rows = cur.fetchall()
+            return rows
+    finally:
+        if conn:
+            return_db_connection(conn)
+
+recent_reviews = get_recent_reviews(20)
+```
+
+Это убирает необходимость вытаскивать весь DataFrame. 
+
+---
+
+## 4.5 Statement timeout и безопасные соединения
+
+Перед выполнением тяжелого запроса (или глобально при получении соединения) установите `SET statement_timeout = 5000;` (например 5s) чтобы запросы не висели вечно и не блокировали пул:
+
+```python
+conn = get_db_connection()
+conn.autocommit = True
+with conn.cursor() as cur:
+    cur.execute("SET LOCAL statement_timeout = %s", (5000,))
+    # далее выполняете query...
+```
+
+---
+
+# 5) Профилирование и валидация (что сделать сразу)
+
+1. Включите `EXPLAIN ANALYZE` для тяжелых SQL (тот, что вы сейчас делаете в коде: `SELECT ... FROM reviews ORDER BY date_create DESC`) — посмотрите, использует ли индекс.
+2. Посмотрите `pg_stat_activity`/`pg_stat_statements` — какие запросы самые долгие.
+3. Локально (или в Replit) профилируйте время выполнения функции `load_dashboard_data_from_db()` и `calculate_dashboard_stats()` — добавьте лог времени и метрики (print(time.time() - t0)) чтобы найти горячие места. 
+
+---
+
+# 6) Почему у вас 5s задержки (конкретно)
+
+* Чаще всего — загрузка всей таблицы (IO + десериализация в pandas) + несколько дорогостоящих `df[...]` фильтраций/копий.
+* Также возможно, что при каждом фильтре вы повторно вызываете `get_product_classes()` и делаете лишние SQL. Это в сумме даёт несколько сотен миллисекунд → секунды на CPU + GC. 
+
+---
+
+# 7) Остальные замечания (стиль кода / надёжность)
+
+* Не импортируйте `signal` и heavy modules внутри обработчика запроса; вынесите наверх. `signal.alarm` в многопроцессном WSGI (gunicorn) — может вести себя непредсказуемо. 
+* `ensure_database_schema()` вызывается внутри `load_dashboard_data_from_db()` — на проде стоит вызывать миграции отдельно, не каждый раз при API вызове. Это лишняя проверка/создание индексов на каждый запрос. 
+* В `ensure_database_schema()` индекс `idx_reviews_has_agent_answer ON reviews (agent_answer_text) WHERE agent_answer_text IS NOT NULL;` — индекс по текстовому полю может быть дорогим; подумайте о `CREATE INDEX ON reviews ( (agent_answer_text IS NOT NULL) )` или просто удалите, если не используется. 
+
+---
+
+# 8) Приоритетный план действий (что делать сейчас, в порядке важности)
+
+1. Исправить фильтрацию `product_filter` → **фильтровать по ключам** (согласовать формат) — это решит проблему «фильтры не работают / hard code». 
+2. Переписать `/api/stats` на SQL-агрегации (`sql_calculate_stats`) и кэшировать результат по ключу (TTL 5–10 минут).
+3. Переписать `/reviews` для серверного `LIMIT 20` (SQL), убрать загрузку всего DF. 
+4. Ввести `@lru_cache` для `get_product_classes()` (или кэш переменной) и уменьшить количество вызовов. 
+5. Уменьшить пул соединений до 8 (или 6) и установить statement_timeout. 
+6. На следующем этапе: materialized views для monthly/category aggregates и Redis для кэша.
+
+---
+
+# 9) Ожидаемый эффект
+
+* Переписанный `/api/stats` на SQL + кэш → **ответы в десятки/сотни миллисекунд** вместо 1–5 секунд.
+* Удаление загрузки всего DataFrame → существенно меньше RAM, отсутствие долгих GC/пересчётов.
+* Правильный формат фильтрации → фикс «необновляющихся» данных.
+* Общая устойчивость и предсказуемость при нагрузке (практически никакого OOM).
+
+---
+
+# 10) Контрольные проверки (после изменений)
+
+* Запросить `/api/stats?product=debet_cards&period=2025-06` и зафиксировать время ответа (до/после).
+* `EXPLAIN ANALYZE` ваших SQL агрегатов.
+* Наблюдать pg_stat_activity: нет «long idle in transaction» и нет долгих блокировок.
+* Мониторинг memory footprint процесса (процесс с pandas vs без).
+
+---
+
+Если хотите — могу:
+
+* 1. Подготовить **патч с диффом** (конкретные изменения в app.py) с описанием, какие строки заменить (и тест-cases) — вставлю рабочие фрагменты прямо взамен тяжёлых функций.
+* 2. Подготовить **SQL для materialized view** и индексы, которые стоит создать в вашей базе.
+* 3. Провести **малый рефактор** ML endpoint (убрать signal, вынести heavy imports, лимитировать размер входного массива).
+
+Скажите, что предпочитаете — я сразу пришлю патч (код-фрагменты/замены) или SQL-скрипты для DBA. Не буду ничего выполнять в фоне — пришлю всё прямо в ответ.
