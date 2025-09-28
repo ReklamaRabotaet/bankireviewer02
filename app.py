@@ -277,7 +277,6 @@ def load_dashboard_data_from_db():
                     ml_sentiments
                 FROM reviews 
                 ORDER BY date_create DESC
-                LIMIT 50000
             """)
             
             rows = cur.fetchall()
