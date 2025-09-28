@@ -57,8 +57,31 @@ def ensure_database_schema():
                     service_category VARCHAR(50) NOT NULL,
                     date_create TIMESTAMP NOT NULL,
                     bank_name VARCHAR(100) DEFAULT 'Газпромбанк',
+                    
+                    -- Дополнительные поля отзыва
+                    is_countable BOOLEAN DEFAULT true,
+                    comment_count INTEGER DEFAULT 0,
+                    resolution_is_approved BOOLEAN DEFAULT null,
+                    has_documents BOOLEAN DEFAULT false,
+                    title TEXT DEFAULT '',
+                    user_name VARCHAR(255) DEFAULT '',
+                    
+                    -- Поля ответа представителя банка
+                    agent_id VARCHAR(100) DEFAULT null,
+                    agent_answer_text TEXT DEFAULT null,
+                    
+                    -- Информация о компании
+                    company_id VARCHAR(100) DEFAULT null,
+                    company_code VARCHAR(50) DEFAULT null,
+                    company_url VARCHAR(500) DEFAULT null,
+                    bank_processed BOOLEAN DEFAULT false,
+                    scraped_page VARCHAR(500) DEFAULT null,
+                    
+                    -- ML анализ
                     ml_topics TEXT[], -- Массив тем из ML
                     ml_sentiments TEXT[], -- Массив тональностей из ML  
+                    
+                    -- Служебные поля
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
@@ -69,6 +92,10 @@ def ensure_database_schema():
             cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_category ON reviews (service_category);")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_grade ON reviews (grade);")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_date_category ON reviews (date_create, service_category);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_agent_id ON reviews (agent_id);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_company_id ON reviews (company_id);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_user_name ON reviews (user_name);")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_has_agent_answer ON reviews (agent_answer_text) WHERE agent_answer_text IS NOT NULL;")
             
             # Создаем таблицу uploaded_datasets если не существует
             cur.execute("""
