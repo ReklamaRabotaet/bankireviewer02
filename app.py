@@ -230,8 +230,8 @@ def load_dashboard_data_from_db():
             
             # Временно отключена автогенерация mock данных для миграции реальных данных
             if False:  # count == 0:
-                print("🔄 База пустая, создаем образец данных...")
-                populate_sample_data()
+                print("📊 База пустая, ожидаем загрузки реальных данных...")
+                # populate_sample_data()  # ОТКЛЮЧЕНО
                 # Повторно считываем после создания данных
                 cur.execute("SELECT COUNT(*) as count FROM reviews") 
                 count = cur.fetchone()['count']
@@ -345,6 +345,17 @@ def calculate_dashboard_stats(df):
     
     # Общая статистика
     total_reviews = len(df)
+    
+    # Проверка пустого DataFrame или отсутствия колонок
+    if total_reviews == 0 or df.empty or 'grade' not in df.columns:
+        return {
+            'total_reviews': 0,
+            'avg_rating': 0.0,
+            'sentiment_distribution': {'positive': 0, 'neutral': 0, 'negative': 0},
+            'category_stats': [],
+            'monthly_trends': [],
+            'volume_data': []
+        }
     
     # Распределение по тональности (на основе рейтинга)
     positive = len(df[df['grade'] >= 4]) / total_reviews * 100
