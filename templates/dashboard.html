@@ -905,19 +905,9 @@
         
         <div class="filter-section">
             <div class="filter-label">Продукты:</div>
-            <div class="product-chips">
+            <div class="product-chips" id="product-chips-container">
                 <button class="chip active" data-product="all" onclick="filterByProduct('all')">Все</button>
-                <button class="chip" data-product="credit_cards" onclick="filterByProduct('credit_cards')">Кредитные карты</button>
-                <button class="chip" data-product="debet_cards" onclick="filterByProduct('debet_cards')">Дебетовые карты</button>
-                <button class="chip" data-product="hypothec" onclick="filterByProduct('hypothec')">Ипотека</button>
-                <button class="chip" data-product="auto_credit" onclick="filterByProduct('auto_credit')">Автокредиты</button>
-                <button class="chip" data-product="consumer_credit" onclick="filterByProduct('consumer_credit')">Потребительские кредиты</button>
-                <button class="chip" data-product="deposits" onclick="filterByProduct('deposits')">Вклады</button>
-                <button class="chip" data-product="mobile_app" onclick="filterByProduct('mobile_app')">Мобильное приложение</button>
-                <button class="chip" data-product="money_transfer" onclick="filterByProduct('money_transfer')">Денежные переводы</button>
-                <button class="chip" data-product="remote_service" onclick="filterByProduct('remote_service')">Дистанционное обслуживание</button>
-                <button class="chip" data-product="restructuring" onclick="filterByProduct('restructuring')">Реструктуризация</button>
-                <button class="chip" data-product="other_individual" onclick="filterByProduct('other_individual')">Другое (физ. лица)</button>
+                <!-- Продукты будут загружены динамически из таблицы classes -->
                 <button class="chip show-more" onclick="toggleAllProducts()">Показать все</button>
             </div>
         </div>
@@ -1026,29 +1016,21 @@
             </div>
             
             {% for product in stats.category_stats %}
-            <div class="product-item">
+            <div class="product-item" data-category="{{ product.category_key or product.name }}">
                 <div class="product-icon">
-                    {% if product.name == 'debet_cards' %}💳
-                    {% elif product.name == 'credit_cards' %}💳
-                    {% elif product.name == 'hypothec' %}🏠
-                    {% elif product.name == 'mobile_app' %}📱
-                    {% elif product.name == 'deposits' %}💰
+                    {% if product.category_key == 'debet_cards' or 'дебетов' in product.name.lower() %}💳
+                    {% elif product.category_key == 'credit_cards' or 'кредитн' in product.name.lower() %}💳
+                    {% elif product.category_key == 'hypothec' or 'ипотек' in product.name.lower() %}🏠
+                    {% elif product.category_key == 'mobile_app' or 'приложен' in product.name.lower() %}📱
+                    {% elif product.category_key == 'deposits' or 'вклад' in product.name.lower() %}💰
+                    {% elif product.category_key == 'auto_credit' or 'авто' in product.name.lower() %}🚗
+                    {% elif product.category_key == 'consumer_credit' or 'потребител' in product.name.lower() %}💳
+                    {% elif product.category_key == 'money_transfer' or 'перевод' in product.name.lower() %}💸
                     {% else %}🏦
                     {% endif %}
                 </div>
                 <div class="product-info">
-                    <div class="product-name">
-                        {% if product.name == 'debet_cards' %}Дебетовые карты
-                        {% elif product.name == 'credit_cards' %}Кредитные карты
-                        {% elif product.name == 'hypothec' %}Ипотека
-                        {% elif product.name == 'auto_credit' %}Автокредиты
-                        {% elif product.name == 'consumer_credit' %}Потребительские кредиты
-                        {% elif product.name == 'mobile_app' %}Мобильное приложение
-                        {% elif product.name == 'deposits' %}Вклады
-                        {% elif product.name == 'remote_service' %}Дистанционное обслуживание
-                        {% else %}{{ product.name.replace('_', ' ').title() }}
-                        {% endif %}
-                    </div>
+                    <div class="product-name">{{ product.name }}</div>
                     <div class="product-count">{{ "{:,}".format(product.total) }} всего отзывов</div>
                 </div>
                 <div class="sentiment-bar">
@@ -1397,10 +1379,48 @@
             }
         }
         
+        // Загрузка продуктов из таблицы classes
+        async function loadProductsFromClasses() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                
+                if (data.products) {
+                    const container = document.getElementById('product-chips-container');
+                    const showMoreBtn = container.querySelector('.show-more');
+                    
+                    // Очищаем существующие чипы (кроме "Все" и "Показать все")
+                    const existingChips = container.querySelectorAll('.chip:not([data-product="all"]):not(.show-more)');
+                    existingChips.forEach(chip => chip.remove());
+                    
+                    // Добавляем новые чипы из таблицы classes
+                    data.products.forEach(product => {
+                        const chip = document.createElement('button');
+                        chip.className = 'chip';
+                        chip.setAttribute('data-product', product.key);
+                        chip.onclick = () => filterByProduct(product.key);
+                        chip.textContent = product.name;
+                        
+                        // Вставляем перед кнопкой "Показать все"
+                        container.insertBefore(chip, showMoreBtn);
+                    });
+                    
+                    console.log('✅ Загружено', data.products.length, 'продуктов из таблицы classes');
+                } else {
+                    console.warn('⚠️ Не удалось загрузить продукты из таблицы classes');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка загрузки продуктов:', error);
+            }
+        }
+
         // Инициализация графиков при загрузке страницы
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📊 Инициализация графиков...');
             try {
+                // Загружаем продукты из таблицы classes
+                await loadProductsFromClasses();
+                
                 // Всегда используем реальные данные из БД
                 const apiUrl = '/api/stats';
                 console.log('📡 Загружаем данные из:', apiUrl);

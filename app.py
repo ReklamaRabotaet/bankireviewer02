@@ -122,26 +122,45 @@ def ensure_database_schema():
         if conn:
             return_db_connection(conn)
 
-# Словарь для перевода названий категорий продуктов
-CATEGORY_TRANSLATIONS = {
-    'debet_cards': 'Дебетовые карты',
-    'credit_cards': 'Кредитные карты', 
-    'hypothec': 'Ипотека',
-    'auto_credit': 'Автокредиты',
-    'consumer_credit': 'Потребительские кредиты',
-    'restructuring': 'Реструктуризация',
-    'deposits': 'Вклады',
-    'money_transfer': 'Денежные переводы',
-    'remote_service': 'Дистанционное обслуживание',
-    'other_individual': 'Другое (физ. лица)',
-    'mobile_app': 'Мобильное приложение',
-    'individual_service': 'Обслуживание физ. лиц',
-    'service_individual': 'Обслуживание физических лиц'
-}
+def get_product_classes():
+    """Получение списка классов продуктов из таблицы classes"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT class_name, class_label_ru, description, total_reviews 
+                FROM classes 
+                ORDER BY total_reviews DESC
+            """)
+            classes = cur.fetchall()
+            return {row['class_name']: row['class_label_ru'] for row in classes}
+    except Exception as e:
+        print(f"❌ Ошибка получения классов продуктов: {e}")
+        # Fallback к старому словарю
+        return {
+            'debet_cards': 'Дебетовые карты',
+            'credit_cards': 'Кредитные карты', 
+            'hypothec': 'Ипотека',
+            'auto_credit': 'Автокредиты',
+            'consumer_credit': 'Потребительские кредиты',
+            'restructuring': 'Реструктуризация',
+            'deposits': 'Вклады',
+            'money_transfer': 'Денежные переводы',
+            'remote_service': 'Дистанционное обслуживание',
+            'other_individual': 'Другое (физ. лица)',
+            'mobile_app': 'Мобильное приложение',
+            'individual_service': 'Обслуживание физ. лиц',
+            'service_individual': 'Обслуживание физических лиц'
+        }
+    finally:
+        if conn:
+            return_db_connection(conn)
 
 def translate_category_name(category_name):
-    """Перевод названия категории с английского на русский"""
-    return CATEGORY_TRANSLATIONS.get(category_name, category_name)
+    """Перевод названия категории с английского на русский используя таблицу classes"""
+    product_classes = get_product_classes()
+    return product_classes.get(category_name, category_name)
 
 # Mock ML API responses - заглушки для тестирования фронтенда
 def mock_ml_analysis_v2(reviews):
@@ -406,18 +425,26 @@ def calculate_dashboard_stats(df):
     neutral = len(df[df['grade'] == 3]) / total_reviews * 100
     negative = len(df[df['grade'] <= 2]) / total_reviews * 100
     
-    # Статистика по категориям (исключаем категорию "all")
+    # Статистика по категориям (используем таблицы classes)
     category_stats = []
+    product_classes = get_product_classes()
+    
     for category in df['service_category'].unique():
         if category == 'all':  # Пропускаем категорию "all"
             continue
         cat_df = df[df['service_category'] == category]
+        
+        # Пропускаем пустые категории
+        if len(cat_df) == 0:
+            continue
+            
         cat_positive = len(cat_df[cat_df['grade'] >= 4]) / len(cat_df) * 100
         cat_neutral = len(cat_df[cat_df['grade'] == 3]) / len(cat_df) * 100
         cat_negative = len(cat_df[cat_df['grade'] <= 2]) / len(cat_df) * 100
         
         category_stats.append({
-            'name': translate_category_name(category),
+            'name': product_classes.get(category, category),
+            'category_key': category,  # Добавляем ключ для фильтрации
             'total': len(cat_df),
             'positive': round(cat_positive, 1),
             'neutral': round(cat_neutral, 1),
@@ -458,10 +485,15 @@ def calculate_dashboard_stats(df):
             'categories': {}
         }
         
-        # Добавляем разбивку по категориям для каждого месяца
+        # Добавляем разбивку по категориям для каждого месяца (используем таблицу classes)
+        product_classes = get_product_classes()
         for category in df['service_category'].unique():
             if category == 'all':  # Пропускаем категорию "all"
                 continue
+            # Проверяем что категория есть в таблице classes
+            if category not in product_classes:
+                continue
+                
             cat_month_df = month_df[month_df['service_category'] == category]
             month_stat['categories'][category] = {
                 'total': len(cat_month_df),
@@ -581,6 +613,38 @@ def api_stats():
     
     return jsonify(stats)
 
+@app.route('/api/products')
+def api_products():
+    """API endpoint для получения списка продуктов из таблицы classes"""
+    
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT class_name, class_label_ru, description, total_reviews 
+                FROM classes 
+                ORDER BY total_reviews DESC
+            """)
+            classes = cur.fetchall()
+            
+            products = []
+            for row in classes:
+                products.append({
+                    'key': row['class_name'],
+                    'name': row['class_label_ru'],
+                    'description': row['description'],
+                    'total_reviews': row['total_reviews']
+                })
+            
+            return jsonify({'products': products})
+            
+    except Exception as e:
+        return jsonify({'error': f'Ошибка получения продуктов: {str(e)}'}), 500
+    finally:
+        if conn:
+            return_db_connection(conn)
+
 @app.route('/api/download-test-data')
 def download_test_data():
     """Загрузка тестовых 250 отзывов в JSON формате"""
@@ -635,14 +699,24 @@ def products_page():
     # Всегда используем реальные данные из БД  
     df = load_dashboard_data_from_db()
     
-    # Статистика по категориям (исключаем категорию "all")
+    # Статистика по категориям (используем таблицу classes)
     category_stats = []
+    product_classes = get_product_classes()
+    
     for category in df['service_category'].unique():
         if category == 'all':  # Пропускаем категорию "all"
             continue
+        # Проверяем что категория есть в таблице classes
+        if category not in product_classes:
+            continue
+            
         cat_df = df[df['service_category'] == category]
+        if len(cat_df) == 0:  # Пропускаем пустые категории
+            continue
+            
         category_stats.append({
-            'name': translate_category_name(category),
+            'name': product_classes[category],
+            'category_key': category,
             'total': len(cat_df),
             'avg_rating': round(cat_df['grade'].mean(), 1),
             'positive': len(cat_df[cat_df['grade'] >= 4]),
