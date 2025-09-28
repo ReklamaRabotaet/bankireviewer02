@@ -10,7 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         /* Пытаемся подключить фирменный шрифт Газпромбанка, с fallback на системные */
         @font-face {
             font-family: 'Gazprombank Sans Base';
@@ -21,14 +21,14 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             font-family: 'Gazprombank Sans Base', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
             color: #1a365d;
             min-height: 100vh;
         }
-        
+
         .header {
             background: #f5f5f5;
             padding: 1rem 2rem;
@@ -38,7 +38,7 @@
             gap: 1rem;
             color: #0a0a0b;
         }
-        
+
         .logo {
             width: 48px;
             height: 48px;
@@ -53,26 +53,26 @@
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         .header-info h1 {
             color: #0a0a0b;
             font-size: 1.5rem;
             margin-bottom: 0.25rem;
             font-weight: 600;
         }
-        
+
         .header-info p {
             color: #0a0a0b;
             font-size: 0.9rem;
         }
-        
+
         .controls {
             margin-left: auto;
             display: flex;
             gap: 1rem;
             align-items: center;
         }
-        
+
         .date-range {
             display: flex;
             align-items: center;
@@ -80,7 +80,7 @@
             color: rgba(10, 10, 11, 0.8);
             font-size: 0.9rem;
         }
-        
+
         .btn {
             background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
             color: white;
@@ -97,12 +97,12 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
         }
-        
+
         .data-source-toggle {
             display: flex;
             flex-direction: column;
@@ -110,7 +110,7 @@
             margin-right: 1rem;
             gap: 0.5rem;
         }
-        
+
         .toggle-label {
             display: flex;
             flex-direction: column;
@@ -119,11 +119,11 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-        
+
         .toggle-label input[type="checkbox"] {
             display: none;
         }
-        
+
         .toggle-switch {
             width: 64px;
             height: 32px;
@@ -132,7 +132,7 @@
             position: relative;
             transition: background 0.2s;
         }
-        
+
         .toggle-switch::after {
             content: '';
             position: absolute;
@@ -145,30 +145,30 @@
             transition: transform 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        
+
         .toggle-label input[type="checkbox"]:checked + .toggle-switch {
             background: #0ea5e9;
         }
-        
+
         .toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
             transform: translateX(32px);
         }
-        
+
         .toggle-text {
             font-weight: 500;
             color: rgba(10, 10, 11, 0.8);
         }
-        
-        
-        
-        
-        
+
+
+
+
+
         .main-content {
             margin-left: 0;
             padding: 2rem;
             min-height: calc(100vh - 200px);
         }
-        
+
         .footer {
             background: #1f2937;
             color: #f9fafb;
@@ -177,26 +177,26 @@
             width: 100%;
             box-sizing: border-box;
         }
-        
+
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .footer-section h4 {
             color: #60a5fa;
             margin-bottom: 1rem;
             font-size: 1.1rem;
         }
-        
+
         .footer-section p {
             color: #d1d5db;
             line-height: 1.5;
             margin-bottom: 0.5rem;
         }
-        
+
         .footer-link {
             display: block;
             color: #93c5fd;
@@ -204,42 +204,47 @@
             margin-bottom: 0.5rem;
             transition: color 0.2s;
         }
-        
+
         .footer-link:hover {
             color: #dbeafe;
         }
-        
+
         .footer-bottom {
             border-top: 1px solid #374151;
             padding-top: 1rem;
             text-align: center;
             color: #9ca3af;
         }
-        
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
+
         .stat-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            padding: 1.5rem;
+            padding: 1.25rem 1.5rem;
             border-radius: 16px;
             box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
             border: 1px solid rgba(14, 165, 233, 0.1);
             transition: all 0.3s ease;
             position: relative;
+            min-height: 140px;
+            max-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        
+
         .stat-header {
             display: flex;
             align-items: center;
             gap: 0.75rem;
             margin-bottom: 1rem;
         }
-        
+
         .stat-icon {
             width: 40px;
             height: 40px;
@@ -252,47 +257,47 @@
             top: 1.5rem;
             right: 1.5rem;
         }
-        
+
         .stat-icon.positive { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; }
         .stat-icon.neutral { background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); color: #ca8a04; }
         .stat-icon.negative { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; }
         .stat-icon.total { background: transparent; }
-        
+
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
             color: #1a365d;
         }
-        
+
         .stat-label {
             color: #64748b;
             font-size: 0.9rem;
             font-weight: 500;
         }
-        
+
         .stat-change {
             font-size: 0.8rem;
             margin-top: 0.5rem;
         }
-        
+
         .stat-change.positive { color: #16a34a; }
         .stat-change.negative { color: #dc2626; }
-        
+
         .charts-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
         }
-        
+
         .product-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
             margin-top: 0.5rem;
         }
-        
+
         .chip {
             background: #f3f4f6;
             border: 1px solid #d1d5db;
@@ -302,23 +307,23 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
+
         .chip:hover {
             background: #e5e7eb;
         }
-        
+
         .chip.active {
             background: #3b82f6;
             color: white;
             border-color: #3b82f6;
         }
-        
+
         .chip.show-more {
             background: #f59e0b;
             color: white;
             border-color: #f59e0b;
         }
-        
+
         .chart-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             padding: 1.5rem;
@@ -327,19 +332,19 @@
             border: 1px solid rgba(14, 165, 233, 0.1);
             width: 100%;
         }
-        
+
         .chart-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
         }
-        
+
         .chart-title {
             font-size: 1.1rem;
             font-weight: 600;
         }
-        
+
         .products-section {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             padding: 1.5rem;
@@ -347,14 +352,14 @@
             box-shadow: 0 4px 16px rgba(26, 54, 93, 0.08);
             border: 1px solid rgba(14, 165, 233, 0.1);
         }
-        
+
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
         }
-        
+
         .product-item {
             display: flex;
             align-items: center;
@@ -366,16 +371,16 @@
             border: 1px solid rgba(14, 165, 233, 0.1);
             transition: all 0.2s ease;
         }
-        
+
         .product-item:last-child {
             margin-bottom: 0;
         }
-        
+
         .product-item:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(26, 54, 93, 0.1);
         }
-        
+
         .product-icon {
             width: 48px;
             height: 48px;
@@ -387,39 +392,39 @@
             margin-right: 1rem;
             font-size: 1.2rem;
         }
-        
+
         .product-info {
             flex: 1;
         }
-        
+
         .product-name {
             font-weight: 600;
             margin-bottom: 0.25rem;
             color: #1a365d;
         }
-        
+
         .product-count {
             color: #64748b;
             font-size: 0.9rem;
             font-weight: 500;
         }
-        
+
         .sentiment-bar {
             flex: 2;
             margin: 0 1rem;
         }
-        
+
         .sentiment-values {
             display: flex;
             justify-content: space-between;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
         }
-        
+
         .sentiment-positive { color: #16a34a; font-weight: 600; }
         .sentiment-neutral { color: #d97706; }
         .sentiment-negative { color: #dc2626; }
-        
+
         .progress-bar {
             height: 8px;
             background: #f3f4f6;
@@ -427,26 +432,26 @@
             overflow: hidden;
             display: flex;
         }
-        
+
         .progress-segment {
             height: 100%;
         }
-        
+
         .progress-positive { background: #16a34a; }
         .progress-neutral { background: #d97706; }
         .progress-negative { background: #dc2626; }
-        
+
         .product-rating {
             text-align: right;
             color: #64748b;
             font-size: 0.9rem;
         }
-        
+
         .rating-value {
             font-weight: 600;
             color: #1a365d;
         }
-        
+
         /* Mobile Navigation */
         .mobile-nav {
             display: none;
@@ -459,13 +464,13 @@
             box-shadow: 0 -4px 20px rgba(26, 54, 93, 0.15);
             z-index: 1000;
         }
-        
+
         .mobile-nav-items {
             display: flex;
             justify-content: space-around;
             align-items: center;
         }
-        
+
         .mobile-nav-item {
             display: flex;
             flex-direction: column;
@@ -479,135 +484,141 @@
             min-width: 44px;
             font-size: 0.7rem;
         }
-        
+
         .mobile-nav-item.active,
         .mobile-nav-item:hover {
             color: white;
             background: rgba(255, 255, 255, 0.1);
         }
-        
+
         .mobile-nav-icon {
             font-size: 1.2rem;
             margin-bottom: 0.2rem;
         }
-        
+
         /* Mobile-first Responsive */
         @media (max-width: 767px) {
             .header {
                 padding: 0.75rem 1rem;
                 margin-bottom: 1rem;
             }
-            
+
             .logo {
                 width: 40px;
                 height: 40px;
                 font-size: 1.2rem;
             }
-            
+
             .header-info h1 {
                 font-size: 1.2rem;
             }
-            
+
             .header-info p {
                 font-size: 0.8rem;
             }
-            
+
             .controls {
                 gap: 0.5rem;
             }
-            
+
             .horizontal-nav {
                 margin: 0 1rem;
                 gap: 0.25rem;
             }
-            
+
             .nav-btn {
                 padding: 0.4rem 0.75rem;
                 font-size: 0.8rem;
             }
-            
+
             .mobile-nav {
                 display: block;
             }
-            
+
             .main-content {
                 margin-left: 0;
                 padding: 0.75rem;
                 padding-bottom: 5rem;
             }
-            
+
             .stats-grid {
                 grid-template-columns: 1fr;
                 gap: 0.75rem;
                 margin-bottom: 1rem;
             }
-            
+
             .stat-card {
                 padding: 1rem;
             }
-            
+
             .stat-value {
                 font-size: 1.5rem;
             }
-            
+
             .charts-container {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
-            
+
             .chart-card {
                 padding: 1rem;
             }
-            
+
             .products-section {
                 margin-top: 1rem;
             }
-            
+
             .product-item {
                 flex-direction: column;
                 align-items: stretch;
                 padding: 0.75rem;
                 gap: 0.75rem;
             }
-            
+
             .product-icon {
                 align-self: flex-start;
                 margin-right: 0;
                 margin-bottom: 0.5rem;
             }
-            
+
             .sentiment-bar {
                 margin: 0;
                 flex: none;
             }
-            
+
             .product-rating {
                 text-align: left;
                 margin-top: 0.5rem;
             }
-            
+
             .api-test {
                 margin-top: 1rem;
                 padding: 1rem;
             }
         }
-        
+
         @media (min-width: 480px) and (max-width: 767px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
             }
-        }
-        
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .main-content {
-                padding: 1.5rem;
+
+            @media (min-width: 768px) and (max-width: 1023px) {
+                .main-content {
+                    padding: 1.5rem;
+                }
+
+                .stats-grid {
+                    grid-template-columns: repeat(4, 1fr);
+                }
             }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+
+            @media (min-width: 1024px) {
+                .stats-grid {
+                    grid-template-columns: repeat(4, 1fr);
+                }
             }
-        }
-        
+
         /* API Test Section */
         .api-test {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -617,11 +628,11 @@
             border: 1px solid rgba(14, 165, 233, 0.1);
             margin-top: 2rem;
         }
-        
+
         .api-form {
             margin-bottom: 1rem;
         }
-        
+
         .api-textarea {
             width: 100%;
             min-height: 100px;
@@ -631,7 +642,7 @@
             font-family: inherit;
             resize: vertical;
         }
-        
+
         .api-result {
             background: #f8fafc;
             padding: 1rem;
@@ -641,7 +652,7 @@
             font-family: monospace;
             white-space: pre-wrap;
         }
-        
+
         .filters-panel {
             background: white;
             padding: 1.5rem 2rem;
@@ -651,39 +662,39 @@
             gap: 2rem;
             border-bottom: 1px solid #e2e8f0;
         }
-        
+
         .filter-section {
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
         }
-        
+
         .filter-label {
             font-weight: 600;
             color: #1a365d;
             white-space: nowrap;
         }
-        
+
         .period-selectors {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
             align-items: end;
         }
-        
+
         .selector-group {
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
             min-width: 120px;
         }
-        
+
         .selector-group label {
             font-size: 0.8rem;
             font-weight: 500;
             color: #64748b;
         }
-        
+
         .period-select {
             padding: 0.5rem 0.75rem;
             border: 2px solid #e2e8f0;
@@ -695,24 +706,24 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .period-select:hover {
             border-color: #2563eb;
         }
-        
+
         .period-select:focus {
             outline: none;
             border-color: #1a365d;
             box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
         }
-        
+
         /* Горизонтальная навигация в шапке */
         .horizontal-nav {
             display: flex;
             gap: 0.5rem;
             margin: 0 2rem;
         }
-        
+
         .nav-btn {
             display: flex;
             align-items: center;
@@ -728,25 +739,25 @@
             text-decoration: none;
             font-size: 0.9rem;
         }
-        
+
         .nav-btn:hover {
             background: rgba(10, 10, 11, 0.15);
             color: #0a0a0b;
             transform: translateY(-1px);
         }
-        
+
         .nav-btn.active {
             background: rgba(10, 10, 11, 0.15);
             color: #0a0a0b;
             border-color: rgba(10, 10, 11, 0.4);
         }
-        
+
         /* Адаптивность шапки */
         @media (max-width: 1199px) {
             .header {
                 flex-wrap: wrap;
             }
-            
+
             .horizontal-nav {
                 order: 3;
                 width: 100%;
@@ -754,23 +765,23 @@
                 justify-content: center;
             }
         }
-        
+
         @media (max-width: 767px) {
             .horizontal-nav {
                 display: none; /* Скрываем на мобильных - используем mobile-nav */
             }
-            
+
             .filters-panel {
                 grid-template-columns: 1fr;
                 gap: 1rem;
                 padding: 1rem;
             }
-            
+
             .product-chips {
                 flex-wrap: wrap;
             }
         }
-        
+
         .sentiment-show-btn {
             margin-top: 0.5rem;
             padding: 0.4rem 0.8rem;
@@ -783,17 +794,68 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .sentiment-show-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        
+
         canvas {
             display: block !important;
             border: 1px solid #e5e5e5 !important;
             background: white !important;
             visibility: visible !important;
+        }
+
+        /* Панель информации о фильтрах */
+        .filter-info-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .filter-info-content {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .current-filter, .current-period, .filter-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .filter-value {
+            font-weight: 700;
+            color: #1a365d;
+            background: rgba(14, 165, 233, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 767px) {
+            .filter-info-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .current-filter, .current-period, .filter-stats {
+                justify-content: space-between;
+            }
         }
     </style>
 </head>
@@ -804,7 +866,7 @@
             <h1>Сам решууу</h1>
             <p>Анализ настроений</p>
         </div>
-        
+
         <!-- Горизонтальная навигация -->
         <div class="horizontal-nav">
             <div class="nav-btn{% if request.endpoint == 'index' %} active{% endif %}" onclick="navigateTo('/')">
@@ -820,7 +882,7 @@
                 Настройки
             </div>
         </div>
-        
+
         <div class="controls">
             <!-- Переключатель убран - всегда используем реальные данные -->
             <div class="data-status">
@@ -830,7 +892,7 @@
             <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="handleFileUpload(event)">
             <button class="btn" id="uploadButton" onclick="document.getElementById('jsonFileInput').click()">Загрузить отзывы</button>
             <button class="btn" onclick="location.reload()">Обновить</button>
-            
+
             <!-- Прогресс-бар для загрузки JSON -->
             <div id="uploadProgressContainer" style="display: none; margin-top: 1rem;">
                 <div style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #4b5563;">
@@ -841,7 +903,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Ссылка для скачивания примера -->
         <div style="text-align: center; margin-top: 0.5rem;">
             <a href="#" onclick="downloadTestData()" style="color: rgba(10, 10, 11, 0.7); text-decoration: none; font-size: 0.85rem;">
@@ -849,7 +911,7 @@
             </a>
         </div>
     </div>
-    
+
     <!-- Панель выбора периода и продуктов -->
     <div class="filters-panel">
         <div class="filter-section">
@@ -878,7 +940,7 @@
                         <option value="2025-05">Май 2025</option>
                     </select>
                 </div>
-                
+
                 <div class="selector-group">
                     <label for="year-select">Год:</label>
                     <select id="year-select" class="period-select">
@@ -887,7 +949,7 @@
                         <option value="2025">2025</option>
                     </select>
                 </div>
-                
+
                 <div class="selector-group">
                     <label for="quarter-select">Квартал:</label>
                     <select id="quarter-select" class="period-select">
@@ -902,7 +964,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="filter-section">
             <div class="filter-label">Продукты:</div>
             <div class="product-chips" id="product-chips-container">
@@ -912,8 +974,8 @@
             </div>
         </div>
     </div>
-    
-    
+
+
     <!-- Mobile Navigation -->
     <div class="mobile-nav">
         <div class="mobile-nav-items">
@@ -935,9 +997,27 @@
             </a>
         </div>
     </div>
-    
+
     <div class="main-content">
-        <div class="stats-grid">
+        <!-- Информация о текущем фильтре -->
+        <div class="filter-info-panel">
+            <div class="filter-info-content">
+                <div class="current-filter">
+                    <span class="filter-label">📊 Текущий фильтр:</span>
+                    <span id="current-product-filter" class="filter-value">Все продукты</span>
+                </div>
+                <div class="current-period">
+                    <span class="filter-label">📅 Период:</span>
+                    <span id="current-period-filter" class="filter-value">Все время</span>
+                </div>
+                <div class="filter-stats">
+                    <span class="filter-label">🔄 Последнее обновление:</span>
+                    <span id="last-update-time" class="filter-value">—</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid"></div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon total">📊</div>
@@ -952,7 +1032,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon positive">👍</div>
@@ -967,7 +1047,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon neutral">😐</div>
@@ -982,7 +1062,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon negative">👎</div>
@@ -998,7 +1078,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="charts-container">
             <div class="chart-card">
                 <div class="chart-header">
@@ -1008,7 +1088,7 @@
                     <canvas id="trendsCanvas" width="800" height="350"></canvas>
                 </div>
             </div>
-            
+
             <div class="chart-card">
                 <div class="chart-header">
                     <h3 class="chart-title">Динамика объема отзывов</h3>
@@ -1018,7 +1098,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="products-section">
             <div class="section-header">
                 <h3>Разбивка настроений по продуктам</h3>
@@ -1026,7 +1106,7 @@
                     <button class="btn">📊 Экспорт</button>
                 </div>
             </div>
-            
+
             {% for product in stats.category_stats %}
             <div class="product-item" data-category="{{ product.category_key or product.name }}">
                 <div class="product-icon">
@@ -1064,7 +1144,7 @@
             </div>
             {% endfor %}
         </div>
-        
+
         <!-- API Test Section для ML интеграции -->
         <div class="api-test">
             <div class="section-header">
@@ -1080,7 +1160,7 @@
             <div id="api-result" class="api-result" style="display: none;"></div>
         </div>
     </div>
-    
+
     <!-- Футер -->
     <footer class="footer">
         <div class="footer-content">
@@ -1107,23 +1187,23 @@
             <p>&copy; 2025 <a href="https://i.moscow/lct" style="color: inherit; text-decoration: none;">ЛЦТ Хакатон</a>, задача 6 от Газпромбанк Тех, команда "Сам решууууу" | Данные: {{ stats.total_reviews if stats.total_reviews > 0 else "—" }} отзывов (Реальные данные)</p>
         </div>
     </footer>
-    
+
     <script>
         async function testMLAPI() {
             const textarea = document.getElementById('test-text');
             const resultDiv = document.getElementById('api-result');
-            
+
             const texts = textarea.value.split('\n').filter(text => text.trim());
-            
+
             if (texts.length === 0) {
                 alert('Введите хотя бы один отзыв для анализа');
                 return;
             }
-            
+
             try {
                 resultDiv.style.display = 'block';
                 resultDiv.textContent = 'Анализирую отзывы...';
-                
+
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {
@@ -1131,79 +1211,79 @@
                     },
                     body: JSON.stringify({ texts: texts })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     let result = '✅ Анализ завершен!\n\n';
                     result += `📊 Обработано отзывов: ${data.processed_count}\n\n`;
-                    
+
                     for (let i = 0; i < texts.length; i++) {
                         result += `📝 Отзыв ${i + 1}: "${texts[i]}"\n`;
                         result += `   💭 Тональность: ${data.results.sentiment[i]} (${data.results.sentiment[i] > 0 ? 'позитивная' : data.results.sentiment[i] < 0 ? 'негативная' : 'нейтральная'})\n`;
                         result += `   🏷️ Категория: ${data.results.categories[i]}\n`;
                         result += `   🎯 Уверенность: ${(data.results.confidence[i] * 100).toFixed(1)}%\n\n`;
                     }
-                    
+
                     resultDiv.textContent = result;
                 } else {
                     resultDiv.textContent = `❌ Ошибка: ${data.error}`;
                 }
-                
+
             } catch (error) {
                 resultDiv.textContent = `❌ Ошибка запроса: ${error.message}`;
             }
         }
-        
+
         // Глобальные переменные для текущих фильтров
         let currentProductFilter = 'all';
         let currentPeriodFilter = null;
-        
+
         // Функция получения статистики с фильтрами
         async function fetchStatsWithFilters(productFilter = null, periodFilter = null) {
             try {
                 let url = '/api/stats';
                 const params = new URLSearchParams();
-                
+
                 if (productFilter && productFilter !== 'all') {
                     params.append('product', productFilter);
                 }
                 if (periodFilter) {
                     params.append('period', periodFilter);
                 }
-                
+
                 if (params.toString()) {
                     url += '?' + params.toString();
                 }
-                
+
                 const response = await fetch(url);
                 const stats = await response.json();
                 console.log('Статистика обновлена:', stats);
-                
+
                 // Обновляем графики
                 updateTrendsChart(stats.monthly_stats || [], null, productFilter);
                 updateVolumeChart(stats.monthly_stats || [], null, productFilter);
-                
+
                 return stats;
             } catch (error) {
                 console.error('Ошибка получения статистики:', error);
                 return null;
             }
         }
-        
+
         // Автообновление статистики каждые 30 секунд
         setInterval(async () => {
             await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
         }, 30000);
-        
+
         // Mock переключатель убран - всегда используем реальные данные
-        
+
         // Функция навигации (всегда реальные данные)
         function navigateTo(path) {
             const url = new URL(path, window.location.origin);
             window.location.href = url.toString();
         }
-        
+
         // Функция загрузки тестовых данных
         async function downloadTestData() {
             try {
@@ -1219,7 +1299,7 @@
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
-                    
+
                     alert('✅ Успешно загружено 250 тестовых отзывов в формате JSON!');
                 } else {
                     throw new Error('Ошибка загрузки файла');
@@ -1228,7 +1308,7 @@
                 alert('❌ Ошибка при загрузке файла: ' + error.message);
             }
         }
-        
+
         // Функции для обновления графиков
         function updateTrendsChart(monthlyStats, sentimentFilter = null, productFilter = null) {
             console.log('🎯 updateTrendsChart вызвана с данными:', monthlyStats.length);
@@ -1237,15 +1317,15 @@
                 console.error('❌ Canvas trendsCanvas не найден');
                 return;
             }
-            
+
             // Устанавливаем размеры канваса
             const container = canvas.parentElement;
             canvas.width = container.clientWidth - 40; // за вычетом отступов
             canvas.height = container.clientHeight - 20;
-            
+
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             if (!monthlyStats || monthlyStats.length === 0) {
                 ctx.fillStyle = '#666';
                 ctx.font = '14px sans-serif';
@@ -1253,15 +1333,15 @@
                 ctx.fillText('📈 Нет данных для отображения', canvas.width / 2, canvas.height / 2);
                 return;
             }
-            
+
             console.log('📊 Рисуем график трендов с', monthlyStats.length, 'месяцами');
-            
+
             // Подготовка данных
             const months = monthlyStats.map(item => item.month);
-            
+
             // Фильтрация данных по продукту  
             let positiveData, negativeData, neutralData;
-            
+
             if (productFilter && productFilter !== 'all') {
                 // Используем данные по конкретной категории
                 positiveData = monthlyStats.map(item => (item.categories && item.categories[productFilter]) ? item.categories[productFilter].positive || 0 : 0);
@@ -1273,12 +1353,12 @@
                 negativeData = monthlyStats.map(item => item.negative || 0);
                 neutralData = monthlyStats.map(item => item.neutral || 0);
             }
-            
+
             const maxValue = Math.max(...positiveData, ...negativeData, ...neutralData);
             const padding = 40;
             const chartWidth = canvas.width - padding * 2;
             const chartHeight = canvas.height - padding * 2;
-            
+
             // Оси
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
@@ -1287,19 +1367,19 @@
             ctx.lineTo(padding, canvas.height - padding);
             ctx.lineTo(canvas.width - padding, canvas.height - padding);
             ctx.stroke();
-            
+
             // Линии
             const stepX = chartWidth / (months.length - 1);
-            
+
             function drawLine(data, color) {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                
+
                 for (let i = 0; i < data.length; i++) {
                     const x = padding + i * stepX;
                     const y = canvas.height - padding - (data[i] / maxValue) * chartHeight;
-                    
+
                     if (i === 0) {
                         ctx.moveTo(x, y);
                     } else {
@@ -1308,11 +1388,11 @@
                 }
                 ctx.stroke();
             }
-            
+
             drawLine(positiveData, '#16a34a');
             drawLine(negativeData, '#dc2626');
             drawLine(neutralData, '#d97706');
-            
+
             // Подписи дат под графиком
             ctx.fillStyle = '#666';
             ctx.font = '10px sans-serif';
@@ -1327,9 +1407,9 @@
                     ctx.fillText(monthLabel, x, canvas.height - padding + 15);
                 }
             }
-            
+
             console.log('✅ График трендов отрисован');
-            
+
             // Легенда
             ctx.font = '12px sans-serif';
             ctx.fillStyle = '#16a34a';
@@ -1339,7 +1419,7 @@
             ctx.fillStyle = '#d97706';
             ctx.fillText('○ Нейтральные', 190, 20);
         }
-        
+
         function updateVolumeChart(monthlyStats, sentimentFilter = null, productFilter = null) {
             console.log('🎯 updateVolumeChart вызвана с данными:', monthlyStats.length);
             const canvas = document.getElementById('volumeCanvas');
@@ -1347,15 +1427,15 @@
                 console.error('❌ Canvas volumeCanvas не найден');
                 return;
             }
-            
+
             // Устанавливаем размеры канваса
             const container = canvas.parentElement;
             canvas.width = container.clientWidth - 40; // за вычетом отступов
             canvas.height = container.clientHeight - 20;
-            
+
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             if (!monthlyStats || monthlyStats.length === 0) {
                 ctx.fillStyle = '#666';
                 ctx.font = '14px sans-serif';
@@ -1363,13 +1443,13 @@
                 ctx.fillText('📊 Нет данных для отображения', canvas.width / 2, canvas.height / 2);
                 return;
             }
-            
+
             // Подготовка данных
             const months = monthlyStats.map(item => item.month);
-            
+
             // Фильтрация данных по продукту
             let totalData;
-            
+
             if (productFilter && productFilter !== 'all') {
                 // Используем данные по конкретной категории
                 totalData = monthlyStats.map(item => (item.categories && item.categories[productFilter]) ? item.categories[productFilter].total || 0 : 0);
@@ -1377,12 +1457,12 @@
                 // Используем общие данные
                 totalData = monthlyStats.map(item => item.total || 0);
             }
-            
+
             const maxValue = Math.max(...totalData);
             const padding = 40;
             const chartWidth = canvas.width - padding * 2;
             const chartHeight = canvas.height - padding * 2;
-            
+
             // Оси
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
@@ -1391,19 +1471,19 @@
             ctx.lineTo(padding, canvas.height - padding);
             ctx.lineTo(canvas.width - padding, canvas.height - padding);
             ctx.stroke();
-            
+
             // Столбцы
             const barWidth = chartWidth / totalData.length * 0.6;
             const barSpacing = chartWidth / totalData.length;
-            
+
             for (let i = 0; i < totalData.length; i++) {
                 const barHeight = (totalData[i] / maxValue) * chartHeight;
                 const x = padding + i * barSpacing + (barSpacing - barWidth) / 2;
                 const y = canvas.height - padding - barHeight;
-                
+
                 ctx.fillStyle = '#0ea5e9';
                 ctx.fillRect(x, y, barWidth, barHeight);
-                
+
                 // Подписи месяцев
                 ctx.fillStyle = '#666';
                 ctx.font = '10px sans-serif';
@@ -1415,21 +1495,21 @@
                 ctx.fillText(monthLabel, x + barWidth / 2, canvas.height - 10);
             }
         }
-        
+
         // Загрузка продуктов из таблицы classes
         async function loadProductsFromClasses() {
             try {
                 const response = await fetch('/api/products');
                 const data = await response.json();
-                
+
                 if (data.products) {
                     const container = document.getElementById('product-chips-container');
                     const showMoreBtn = container.querySelector('.show-more');
-                    
+
                     // Очищаем существующие чипы (кроме "Все" и "Показать все")
                     const existingChips = container.querySelectorAll('.chip:not([data-product="all"]):not(.show-more)');
                     existingChips.forEach(chip => chip.remove());
-                    
+
                     // Добавляем новые чипы из таблицы classes
                     data.products.forEach(product => {
                         const chip = document.createElement('button');
@@ -1437,11 +1517,11 @@
                         chip.setAttribute('data-product', product.key);
                         chip.onclick = () => filterByProduct(product.key);
                         chip.textContent = product.name;
-                        
+
                         // Вставляем перед кнопкой "Показать все"
                         container.insertBefore(chip, showMoreBtn);
                     });
-                    
+
                     console.log('✅ Загружено', data.products.length, 'продуктов из таблицы classes');
                 } else {
                     console.warn('⚠️ Не удалось загрузить продукты из таблицы classes');
@@ -1457,20 +1537,20 @@
             try {
                 // Загружаем продукты из таблицы classes
                 await loadProductsFromClasses();
-                
+
                 // Всегда используем реальные данные из БД
                 const apiUrl = '/api/stats';
                 console.log('📡 Загружаем данные из:', apiUrl);
-                
+
                 const response = await fetch(apiUrl);
                 const stats = await response.json();
                 console.log('📈 Получены данные для графиков:', stats.monthly_stats?.length || 0, 'месяцев');
-                
+
                 // Сохраняем данные в кэш и глобально
                 cachedMonthlyStats = stats.monthly_stats || [];
                 cachedCategoryStats = stats.category_stats || [];
                 window.currentStats = stats;
-                
+
                 updateTrendsChart(cachedMonthlyStats);
                 updateVolumeChart(cachedMonthlyStats);
                 console.log('✅ Графики инициализированы');
@@ -1478,18 +1558,18 @@
                 console.error('❌ Ошибка загрузки начальных данных:', error);
             }
         });
-        
+
         // Функция фильтрации данных по периоду
         function filterDataByPeriod(period) {
             console.log('📅 Фильтруем данные по периоду:', period);
-            
+
             if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
                 console.warn('⚠️ Нет данных для фильтрации');
                 return;
             }
-            
+
             let filteredData = cachedMonthlyStats;
-            
+
             switch(period) {
                 case 'month':
                     // Последний месяц
@@ -1509,47 +1589,47 @@
                     filteredData = cachedMonthlyStats;
                     break;
             }
-            
+
             console.log('📈 Отфильтровано', filteredData.length, 'месяцев из', cachedMonthlyStats.length);
-            
+
             // Обновляем графики
             updateTrendsChart(filteredData);
             updateVolumeChart(filteredData);
         }
 
         // Старые кнопки period-btn заменены на dropdown селекторы
-        
+
         // Функция обновления прогресс-бара
         function updateUploadProgress(percentage, text) {
             const container = document.getElementById('uploadProgressContainer');
             const progressBar = document.getElementById('uploadProgressBar');
             const progressText = document.getElementById('uploadProgressText');
-            
+
             // Показываем контейнер прогресс-бара
             if (container) {
                 container.style.display = 'block';
             }
-            
+
             // Обновляем текст и прогресс
             if (progressText) {
                 progressText.textContent = text;
             }
-            
+
             if (progressBar) {
                 progressBar.style.width = `${percentage}%`;
                 progressBar.textContent = `${percentage}%`;
             }
-            
+
             console.log(`📊 Прогресс: ${percentage}% - ${text}`);
         }
-        
+
         // Функция скрытия прогресс-бара
         function hideUploadProgress() {
             const container = document.getElementById('uploadProgressContainer');
             if (container) {
                 container.style.display = 'none';
             }
-            
+
             const progressBar = document.getElementById('uploadProgressBar');
             if (progressBar) {
                 progressBar.style.width = '0%';
@@ -1561,133 +1641,133 @@
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             console.log('📁 Загружен файл:', file.name);
-            
+
             // Инициализируем прогресс-бар
             updateUploadProgress(0, 'Проверка типа файла...');
-            
+
             // Проверяем что это JSON файл
             if (!file.name.toLowerCase().endsWith('.json')) {
                 hideUploadProgress();
                 alert('⚠️ Пожалуйста, выберите JSON файл');
                 return;
             }
-            
+
             try {
                 // Этап 1: Чтение файла (15%)
                 updateUploadProgress(15, 'Читаем содержимое файла...');
                 await new Promise(resolve => setTimeout(resolve, 300)); 
-                
+
                 const fileContent = await file.text();
-                
+
                 // Этап 2: Парсинг JSON (30%)
                 updateUploadProgress(30, 'Парсинг JSON данных...');
                 await new Promise(resolve => setTimeout(resolve, 400));
-                
+
                 const jsonData = JSON.parse(fileContent);
-                
+
                 console.log('📄 Содержимое файла прочитано, размер:', fileContent.length, 'символов');
-                
+
                 // Этап 3: Валидация структуры (45%)
                 updateUploadProgress(45, 'Проверка формата данных...');
                 await new Promise(resolve => setTimeout(resolve, 300));
-                
+
                 // Валидируем формат данных
                 if (!jsonData.reviews || !Array.isArray(jsonData.reviews)) {
                     hideUploadProgress();
                     alert('⚠️ Неверный формат файла. Ожидается JSON с полем "reviews" содержащим массив отзывов');
                     return;
                 }
-                
+
                 const reviewsCount = jsonData.reviews.length;
                 console.log('✅ Найдено отзывов для анализа:', reviewsCount);
-                
+
                 if (reviewsCount === 0) {
                     hideUploadProgress();
                     alert('⚠️ В файле нет отзывов для анализа');
                     return;
                 }
-                
+
                 // Этап 4: Проверка структуры отзывов (60%)
                 updateUploadProgress(60, `Проверка структуры ${reviewsCount} отзывов...`);
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
+
                 // Проверяем структуру ВСЕХ отзывов (но с прогрессом)
                 for (let i = 0; i < jsonData.reviews.length; i++) {
                     const review = jsonData.reviews[i];
-                    
+
                     // Показываем прогресс валидации каждые 50 отзывов
                     if (i % 50 === 0) {
                         const validationProgress = 60 + (i / jsonData.reviews.length) * 15;
                         updateUploadProgress(Math.round(validationProgress), `Проверка отзыва ${i + 1}/${jsonData.reviews.length}...`);
                         await new Promise(resolve => setTimeout(resolve, 50));
                     }
-                    
+
                     // Проверяем что отзыв - это объект
                     if (typeof review !== 'object' || review === null) {
                         hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1} должен быть объектом`);
                         return;
                     }
-                    
+
                     // Проверяем наличие обязательных полей
                     if (!review.hasOwnProperty('id') || !review.hasOwnProperty('text')) {
                         hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1} должен содержать поля "id" и "text"`);
                         return;
                     }
-                    
+
                     // Проверяем что поля не пустые
                     if (typeof review.id !== 'string' || review.id.trim() === '') {
                         hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1}: поле "id" должно быть непустой строкой`);
                         return;
                     }
-                    
+
                     if (typeof review.text !== 'string' || review.text.trim() === '') {
                         hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1}: поле "text" должно быть непустой строкой`);
                         return;
                     }
                 }
-                
+
                 // Этап 5: Подготовка к отправке (85%)
                 updateUploadProgress(85, 'Подготовка данных для ML анализа...');
                 await new Promise(resolve => setTimeout(resolve, 400));
-                
+
                 // Показываем индикатор загрузки на кнопке
                 const uploadButton = document.getElementById('uploadButton');
                 const originalText = uploadButton.innerHTML;
                 uploadButton.innerHTML = '⏳ Анализируем...';
                 uploadButton.disabled = true;
-                
+
                 // Этап 6: Отправка на анализ (100%)
                 updateUploadProgress(100, `Отправка ${reviewsCount} отзывов на ML анализ...`);
-                
+
                 // Отправляем данные на ML анализ
                 await analyzeUploadedReviews(jsonData.reviews, uploadButton, originalText);
-                
+
             } catch (error) {
                 console.error('❌ Ошибка обработки файла:', error);
                 hideUploadProgress();
-                
+
                 // Восстанавливаем кнопку
                 const uploadButton = document.getElementById('uploadButton');
                 if (uploadButton) {
                     uploadButton.innerHTML = 'Загрузить отзывы';
                     uploadButton.disabled = false;
                 }
-                
+
                 alert('❌ Ошибка чтения файла: ' + error.message);
             }
         }
-        
+
         // Функция отправки данных на ML анализ
         async function analyzeUploadedReviews(reviews, button, originalText) {
             try {
                 console.log('🤖 Отправляем', reviews.length, 'отзывов на ML анализ...');
-                
+
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {
@@ -1695,17 +1775,17 @@
                     },
                     body: JSON.stringify({ reviews: reviews })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const result = await response.json();
                 console.log('✅ Получены результаты ML анализа:', result);
-                
+
                 // Показываем результаты пользователю
                 showAnalysisResults(result, reviews.length);
-                
+
             } catch (error) {
                 console.error('❌ Ошибка ML анализа:', error);
                 alert('❌ Ошибка анализа: ' + error.message);
@@ -1715,35 +1795,35 @@
                 button.disabled = false;
             }
         }
-        
+
         // Функция показа результатов анализа
         function showAnalysisResults(result, totalReviews) {
             let message = `🎯 Анализ завершен!\n\n`;
             message += `📊 Обработано отзывов: ${totalReviews}\n`;
             message += `✅ Успешно проанализировано: ${result.results?.length || 0}\n`;
-            
+
             if (result.errors && result.errors.length > 0) {
                 message += `⚠️ Ошибки: ${result.errors.length}\n`;
             }
-            
+
             // Подсчитываем тональности
             const sentiments = result.results?.flatMap(r => r.sentiments || []) || [];
             const positive = sentiments.filter(s => s === 'positive').length;
             const negative = sentiments.filter(s => s === 'negative').length;
             const neutral = sentiments.filter(s => s === 'neutral').length;
-            
+
             message += `\n📈 Тональность:\n`;
             message += `😊 Позитивная: ${positive}\n`;
             message += `😐 Нейтральная: ${neutral}\n`;
             message += `😞 Негативная: ${negative}\n`;
-            
+
             // Подсчитываем темы
             const topics = result.results?.flatMap(r => r.topics || []) || [];
             const topicCounts = {};
             topics.forEach(topic => {
                 topicCounts[topic] = (topicCounts[topic] || 0) + 1;
             });
-            
+
             message += `\n🏷️ Основные темы:\n`;
             Object.entries(topicCounts)
                 .sort(([,a], [,b]) => b - a)
@@ -1751,27 +1831,27 @@
                 .forEach(([topic, count]) => {
                     message += `• ${topic}: ${count}\n`;
                 });
-            
+
             alert(message);
             console.log('📋 Результаты анализа показаны пользователю');
         }
-        
+
         // Уведомление о готовности к интеграции
         console.log('🚀 Dashboard готов к интеграции с ML API!');
         console.log('📡 Эндпоинты:');
         console.log('  POST /api/analyze - анализ текстов');
         console.log('  GET /api/stats - получение статистики');
         console.log('  GET /health - проверка работоспособности');
-        
+
         // Кэш данных для фильтрации
         let cachedMonthlyStats = [];
         let cachedCategoryStats = [];
-        
+
         // Функции обновления DOM элементов
         function updateStatsCards(stats) {
             // Обновляем значения в карточках статистики
             const cards = document.querySelectorAll('.stat-card');
-            
+
             // Всего отзывов
             if (cards[0]) {
                 const valueEl = cards[0].querySelector('.stat-value');
@@ -1783,7 +1863,7 @@
                     changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
                 }
             }
-            
+
             // Положительные
             if (cards[1]) {
                 const valueEl = cards[1].querySelector('.stat-value');
@@ -1795,7 +1875,7 @@
                     changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
                 }
             }
-            
+
             // Нейтральные
             if (cards[2]) {
                 const valueEl = cards[2].querySelector('.stat-value');
@@ -1807,7 +1887,7 @@
                     changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
                 }
             }
-            
+
             // Отрицательные
             if (cards[3]) {
                 const valueEl = cards[3].querySelector('.stat-value');
@@ -1820,12 +1900,12 @@
                 }
             }
         }
-        
+
         function updateProductsSection(stats) {
             // Обновляем секцию продуктов
             const productsSection = document.querySelector('.products-section');
             if (!productsSection || !stats.category_stats) return;
-            
+
             // Генерируем новую разметку продуктов
             let productsHTML = '';
             stats.category_stats.forEach(product => {
@@ -1856,17 +1936,17 @@
                     </div>
                 `;
             });
-            
+
             // Обновляем содержимое секции продуктов
             const existingItems = productsSection.querySelectorAll('.product-item');
             existingItems.forEach(item => item.remove());
-            
+
             const sectionHeader = productsSection.querySelector('.section-header');
             if (sectionHeader) {
                 sectionHeader.insertAdjacentHTML('afterend', productsHTML);
             }
         }
-        
+
         function getProductIcon(categoryKey, name) {
             if (categoryKey === 'debet_cards' || name.toLowerCase().includes('дебетов')) return '💳';
             if (categoryKey === 'credit_cards' || name.toLowerCase().includes('кредитн')) return '💳';
@@ -1878,71 +1958,125 @@
             if (categoryKey === 'money_transfer' || name.toLowerCase().includes('перевод')) return '💸';
             return '🏦';
         }
-        
+
         // Функция показа всех отзывов (сброс всех фильтров)
         async function showAllReviews() {
             console.log('🎯 Показать все отзывы');
-            
+
             // Сброс фильтров
             currentProductFilter = 'all';
             currentPeriodFilter = null;
-            
+
             // Сброс UI фильтров продуктов
             document.querySelectorAll('.chip:not(.show-more)').forEach(chip => {
                 chip.classList.remove('active');
             });
             document.querySelector('[data-product="all"]').classList.add('active');
-            
+
             // Сброс фильтров периода
             document.getElementById('month-select').value = '';
             document.getElementById('year-select').value = '';
             document.getElementById('quarter-select').value = '';
-            
+
             // Сброс фильтров настроений
             document.querySelectorAll('.sentiment-show-btn').forEach(btn => {
                 btn.style.background = 'linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%)';
                 btn.textContent = 'Показать';
             });
-            
+
             // Активируем кнопку "Показать" для всех отзывов
             const totalBtn = document.querySelector('.stat-card:first-child .sentiment-show-btn');
             if (totalBtn) {
                 totalBtn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
                 totalBtn.innerHTML = '✓ Активно';
             }
-            
+
+            // Обновляем информацию о фильтрах
+            updateFilterInfo('all', null);
+
             // Получаем полную статистику
             const stats = await fetchStatsWithFilters();
             if (stats) {
                 updateStatsCards(stats);
                 updateProductsSection(stats);
             }
-            
+
             console.log('✅ Показаны все отзывы');
         }
-        
+
+        // Функция обновления информации о текущих фильтрах
+        function updateFilterInfo(productFilter, periodFilter) {
+            // Обновляем название продукта
+            const productElement = document.getElementById('current-product-filter');
+            if (productElement) {
+                if (!productFilter || productFilter === 'all') {
+                    productElement.textContent = 'Все продукты';
+                } else {
+                    // Находим название продукта из чипа
+                    const chip = document.querySelector(`[data-product="${productFilter}"]`);
+                    productElement.textContent = chip ? chip.textContent : productFilter;
+                }
+            }
+
+            // Обновляем информацию о периоде
+            const periodElement = document.getElementById('current-period-filter');
+            if (periodElement) {
+                if (!periodFilter) {
+                    periodElement.textContent = 'Все время';
+                } else {
+                    // Формируем читаемое название периода
+                    if (periodFilter.includes('-Q')) {
+                        const [year, quarter] = periodFilter.split('-Q');
+                        const quarterNames = { '1': 'I кв.', '2': 'II кв.', '3': 'III кв.', '4': 'IV кв.' };
+                        periodElement.textContent = `${quarterNames[quarter]} ${year}`;
+                    } else if (periodFilter.length === 7) {
+                        // YYYY-MM формат
+                        const [year, month] = periodFilter.split('-');
+                        const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 
+                                          'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                        periodElement.textContent = `${monthNames[parseInt(month) - 1]} ${year}`;
+                    } else if (periodFilter.length === 4) {
+                        // YYYY формат
+                        periodElement.textContent = periodFilter + ' год';
+                    } else {
+                        periodElement.textContent = periodFilter;
+                    }
+                }
+            }
+
+            // Обновляем время последнего обновления
+            const updateTimeElement = document.getElementById('last-update-time');
+            if (updateTimeElement) {
+                const now = new Date();
+                updateTimeElement.textContent = now.toLocaleTimeString('ru-RU');
+            }
+        }
+
         // Функция фильтрации графика по продукту
         async function filterByProduct(productType) {
             console.log('🎯 Фильтруем график по продукту:', productType);
-            
+
             // Сохраняем текущий фильтр
             currentProductFilter = productType;
-            
+
             // Обновляем активный чип
             document.querySelectorAll('.chip:not(.show-more)').forEach(chip => {
                 chip.classList.remove('active');
             });
             document.querySelector(`[data-product="${productType}"]`).classList.add('active');
-            
+
             // Сброс фильтров настроений (включая кнопку "Всего отзывов")
             document.querySelectorAll('.sentiment-show-btn').forEach(btn => {
                 btn.style.background = 'linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%)';
                 btn.textContent = 'Показать';
             });
-            
+
+            // Обновляем информацию о фильтрах
+            updateFilterInfo(productType, currentPeriodFilter);
+
             // Получаем обновленную статистику с сервера
             const stats = await fetchStatsWithFilters(productType, currentPeriodFilter);
-            
+
             if (stats) {
                 // Обновляем карточки статистики
                 updateStatsCards(stats);
@@ -1953,27 +2087,27 @@
                 console.warn('⚠️ Не удалось получить статистику');
             }
         }
-        
+
         // Функция фильтрации по типу настроения
         function filterBySentiment(sentiment) {
             console.log('🎯 Фильтр по настроению:', sentiment);
-            
+
             // Обновляем активное состояние кнопок
             document.querySelectorAll('.sentiment-show-btn').forEach(btn => {
                 btn.style.background = 'linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%)';
                 btn.textContent = 'Показать';
             });
-            
+
             // Отмечаем активную кнопку
             const activeBtn = event.target;
             activeBtn.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             activeBtn.textContent = '✓ Активно';
-            
+
             // Фильтруем данные по настроению
             if (cachedMonthlyStats.length > 0) {
                 let filteredData = cachedMonthlyStats.map(month => {
                     let filteredMonth = {...month};
-                    
+
                     if (sentiment === 'positive') {
                         filteredMonth.negative = 0;
                         filteredMonth.neutral = 0;
@@ -1987,10 +2121,10 @@
                         filteredMonth.negative = 0;
                         filteredMonth.total = month.neutral;
                     }
-                    
+
                     return filteredMonth;
                 });
-                
+
                 updateTrendsChart(filteredData, sentiment);
                 updateVolumeChart(filteredData, sentiment);
                 console.log('✅ Данные отфильтрованы по настроению:', sentiment);
@@ -2016,51 +2150,51 @@
                 });
             }
         }
-        
+
         // Старые period-btn обработчики заменены на dropdown селекторы
         document.addEventListener('DOMContentLoaded', function() {
             // Инициализация скрытия лишних чипсов
             toggleAllProducts();
             toggleAllProducts(); // Двойной вызов чтобы привести в исходное состояние
         });
-        
+
         // Функции фильтрации данных по выбранному периоду
         function filterDataByMonth(selectedMonth) {
             if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
                 console.warn('⚠️ Нет данных для фильтрации по месяцу');
                 return;
             }
-            
+
             const filteredData = cachedMonthlyStats.filter(item => item.month === selectedMonth);
             console.log(`📅 Отфильтровано по месяцу ${selectedMonth}:`, filteredData.length, 'записей');
-            
+
             updateTrendsChart(filteredData);
             updateVolumeChart(filteredData);
         }
-        
+
         function filterDataByYear(selectedYear) {
             if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
                 console.warn('⚠️ Нет данных для фильтрации по году');
                 return;
             }
-            
+
             const filteredData = cachedMonthlyStats.filter(item => item.month.startsWith(selectedYear));
             console.log(`📅 Отфильтровано по году ${selectedYear}:`, filteredData.length, 'записей');
-            
+
             updateTrendsChart(filteredData);
             updateVolumeChart(filteredData);
         }
-        
+
         function filterDataByQuarter(selectedQuarter) {
             if (!cachedMonthlyStats || cachedMonthlyStats.length === 0) {
                 console.warn('⚠️ Нет данных для фильтрации по кварталу');
                 return;
             }
-            
+
             // Преобразуем квартал в месяцы (например, 2024-Q1 -> [2024-01, 2024-02, 2024-03])
             const [year, quarter] = selectedQuarter.split('-');
             let months = [];
-            
+
             switch(quarter) {
                 case 'Q1':
                     months = [`${year}-01`, `${year}-02`, `${year}-03`];
@@ -2075,14 +2209,14 @@
                     months = [`${year}-10`, `${year}-11`, `${year}-12`];
                     break;
             }
-            
+
             const filteredData = cachedMonthlyStats.filter(item => months.includes(item.month));
             console.log(`📅 Отфильтровано по кварталу ${selectedQuarter}:`, filteredData.length, 'записей');
-            
+
             updateTrendsChart(filteredData);
             updateVolumeChart(filteredData);
         }
-        
+
         function resetToAllData() {
             console.log('📅 Сброс фильтров - показать все данные');
             if (cachedMonthlyStats && cachedMonthlyStats.length > 0) {
@@ -2090,7 +2224,7 @@
                 updateVolumeChart(cachedMonthlyStats);
             }
         }
-        
+
         // Обработчики для выпадающих списков
         document.addEventListener('DOMContentLoaded', function() {
             // Месяц
@@ -2100,13 +2234,16 @@
                     const selectedMonth = this.value;
                     console.log('📅 Выбран месяц:', selectedMonth);
                     currentPeriodFilter = selectedMonth || null;
-                    
+
                     if (selectedMonth) {
                         // Сброс других фильтров
                         document.getElementById('year-select').value = '';
                         document.getElementById('quarter-select').value = '';
                     }
-                    
+
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
+
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
                     if (stats) {
@@ -2115,7 +2252,7 @@
                     }
                 });
             }
-            
+
             // Год
             const yearSelect = document.getElementById('year-select');
             if (yearSelect) {
@@ -2123,13 +2260,16 @@
                     const selectedYear = this.value;
                     console.log('📅 Выбран год:', selectedYear);
                     currentPeriodFilter = selectedYear || null;
-                    
+
                     if (selectedYear) {
                         // Сброс других фильтров
                         document.getElementById('month-select').value = '';
                         document.getElementById('quarter-select').value = '';
                     }
-                    
+
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
+
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
                     if (stats) {
@@ -2138,7 +2278,7 @@
                     }
                 });
             }
-            
+
             // Квартал
             const quarterSelect = document.getElementById('quarter-select');
             if (quarterSelect) {
@@ -2146,13 +2286,16 @@
                     const selectedQuarter = this.value;
                     console.log('📅 Выбран квартал:', selectedQuarter);
                     currentPeriodFilter = selectedQuarter || null;
-                    
+
                     if (selectedQuarter) {
                         // Сброс других фильтров
                         document.getElementById('month-select').value = '';
                         document.getElementById('year-select').value = '';
                     }
-                    
+
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
+
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
                     if (stats) {
