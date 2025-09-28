@@ -828,8 +828,18 @@
             </div>
             <!-- Скрытый input для загрузки JSON файла -->
             <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="handleFileUpload(event)">
-            <button class="btn" onclick="document.getElementById('jsonFileInput').click()">Загрузить отзывы</button>
+            <button class="btn" id="uploadButton" onclick="document.getElementById('jsonFileInput').click()">Загрузить отзывы</button>
             <button class="btn" onclick="location.reload()">Обновить</button>
+            
+            <!-- Прогресс-бар для загрузки JSON -->
+            <div id="uploadProgressContainer" style="display: none; margin-top: 1rem;">
+                <div style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #4b5563;">
+                    <span id="uploadProgressText">Подготовка к загрузке...</span>
+                </div>
+                <div class="progress-bar" style="height: 20px; background: #e5e7eb;">
+                    <div id="uploadProgressBar" class="progress-segment" style="width: 0%; background: linear-gradient(90deg, #3b82f6, #1d4ed8); transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; font-weight: 600;"></div>
+                </div>
+            </div>
         </div>
         
         <!-- Ссылка для скачивания примера -->
@@ -1452,6 +1462,44 @@
 
         // Старые кнопки period-btn заменены на dropdown селекторы
         
+        // Функция обновления прогресс-бара
+        function updateUploadProgress(percentage, text) {
+            const container = document.getElementById('uploadProgressContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            
+            // Показываем контейнер прогресс-бара
+            if (container) {
+                container.style.display = 'block';
+            }
+            
+            // Обновляем текст и прогресс
+            if (progressText) {
+                progressText.textContent = text;
+            }
+            
+            if (progressBar) {
+                progressBar.style.width = `${percentage}%`;
+                progressBar.textContent = `${percentage}%`;
+            }
+            
+            console.log(`📊 Прогресс: ${percentage}% - ${text}`);
+        }
+        
+        // Функция скрытия прогресс-бара
+        function hideUploadProgress() {
+            const container = document.getElementById('uploadProgressContainer');
+            if (container) {
+                container.style.display = 'none';
+            }
+            
+            const progressBar = document.getElementById('uploadProgressBar');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                progressBar.textContent = '';
+            }
+        }
+
         // Функция обработки загруженного JSON файла
         async function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -1459,21 +1507,38 @@
             
             console.log('📁 Загружен файл:', file.name);
             
+            // Инициализируем прогресс-бар
+            updateUploadProgress(0, 'Проверка типа файла...');
+            
             // Проверяем что это JSON файл
             if (!file.name.toLowerCase().endsWith('.json')) {
+                hideUploadProgress();
                 alert('⚠️ Пожалуйста, выберите JSON файл');
                 return;
             }
             
             try {
-                // Читаем содержимое файла
+                // Этап 1: Чтение файла (15%)
+                updateUploadProgress(15, 'Читаем содержимое файла...');
+                await new Promise(resolve => setTimeout(resolve, 300)); 
+                
                 const fileContent = await file.text();
+                
+                // Этап 2: Парсинг JSON (30%)
+                updateUploadProgress(30, 'Парсинг JSON данных...');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                
                 const jsonData = JSON.parse(fileContent);
                 
                 console.log('📄 Содержимое файла прочитано, размер:', fileContent.length, 'символов');
                 
+                // Этап 3: Валидация структуры (45%)
+                updateUploadProgress(45, 'Проверка формата данных...');
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
                 // Валидируем формат данных
                 if (!jsonData.reviews || !Array.isArray(jsonData.reviews)) {
+                    hideUploadProgress();
                     alert('⚠️ Неверный формат файла. Ожидается JSON с полем "reviews" содержащим массив отзывов');
                     return;
                 }
@@ -1482,49 +1547,81 @@
                 console.log('✅ Найдено отзывов для анализа:', reviewsCount);
                 
                 if (reviewsCount === 0) {
+                    hideUploadProgress();
                     alert('⚠️ В файле нет отзывов для анализа');
                     return;
                 }
                 
-                // Проверяем структуру ВСЕХ отзывов
+                // Этап 4: Проверка структуры отзывов (60%)
+                updateUploadProgress(60, `Проверка структуры ${reviewsCount} отзывов...`);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Проверяем структуру ВСЕХ отзывов (но с прогрессом)
                 for (let i = 0; i < jsonData.reviews.length; i++) {
                     const review = jsonData.reviews[i];
                     
+                    // Показываем прогресс валидации каждые 50 отзывов
+                    if (i % 50 === 0) {
+                        const validationProgress = 60 + (i / jsonData.reviews.length) * 15;
+                        updateUploadProgress(Math.round(validationProgress), `Проверка отзыва ${i + 1}/${jsonData.reviews.length}...`);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                    
                     // Проверяем что отзыв - это объект
                     if (typeof review !== 'object' || review === null) {
+                        hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1} должен быть объектом`);
                         return;
                     }
                     
                     // Проверяем наличие обязательных полей
                     if (!review.hasOwnProperty('id') || !review.hasOwnProperty('text')) {
+                        hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1} должен содержать поля "id" и "text"`);
                         return;
                     }
                     
                     // Проверяем что поля не пустые
                     if (typeof review.id !== 'string' || review.id.trim() === '') {
+                        hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1}: поле "id" должно быть непустой строкой`);
                         return;
                     }
                     
                     if (typeof review.text !== 'string' || review.text.trim() === '') {
+                        hideUploadProgress();
                         alert(`⚠️ Отзыв №${i + 1}: поле "text" должно быть непустой строкой`);
                         return;
                     }
                 }
                 
-                // Показываем индикатор загрузки
-                const uploadButton = event.target.parentNode.querySelector('button');
+                // Этап 5: Подготовка к отправке (85%)
+                updateUploadProgress(85, 'Подготовка данных для ML анализа...');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                
+                // Показываем индикатор загрузки на кнопке
+                const uploadButton = document.getElementById('uploadButton');
                 const originalText = uploadButton.innerHTML;
                 uploadButton.innerHTML = '⏳ Анализируем...';
                 uploadButton.disabled = true;
+                
+                // Этап 6: Отправка на анализ (100%)
+                updateUploadProgress(100, `Отправка ${reviewsCount} отзывов на ML анализ...`);
                 
                 // Отправляем данные на ML анализ
                 await analyzeUploadedReviews(jsonData.reviews, uploadButton, originalText);
                 
             } catch (error) {
                 console.error('❌ Ошибка обработки файла:', error);
+                hideUploadProgress();
+                
+                // Восстанавливаем кнопку
+                const uploadButton = document.getElementById('uploadButton');
+                if (uploadButton) {
+                    uploadButton.innerHTML = 'Загрузить отзывы';
+                    uploadButton.disabled = false;
+                }
+                
                 alert('❌ Ошибка чтения файла: ' + error.message);
             }
         }
