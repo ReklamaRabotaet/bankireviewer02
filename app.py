@@ -309,8 +309,8 @@ def load_dashboard_data_from_db():
             
     except Exception as e:
         print(f"❌ Ошибка загрузки данных из БД: {e}")
-        # В случае ошибки создаем минимальный набор данных
-        return create_minimal_fallback_data()
+        # В случае ошибки возвращаем пустой DataFrame
+        return pd.DataFrame(columns=['id', 'dateCreate', 'grade', 'service_category', 'text', 'bank_name'])
     finally:
         if conn:
             return_db_connection(conn)
@@ -370,19 +370,8 @@ def populate_sample_data():
             return_db_connection(conn)
 
 def create_minimal_fallback_data():
-    """Создание минимального набора данных в случае проблем с БД"""
-    data = []
-    for i in range(100):
-        data.append({
-            'id': f'fallback_{i}',
-            'dateCreate': datetime.now() - timedelta(days=random.randint(0, 365)),
-            'grade': random.randint(1, 5),
-            'service_category': 'credit_cards',
-            'text': f'Резервный отзыв #{i}',
-            'bank_name': 'Газпромбанк'
-        })
-    
-    return pd.DataFrame(data)
+    """Возвращает пустой DataFrame в случае проблем с БД"""
+    return pd.DataFrame(columns=['id', 'dateCreate', 'grade', 'service_category', 'text', 'bank_name'])
 
 # Расчет статистики для дашборда
 def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
@@ -394,13 +383,10 @@ def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
     # Фильтр по продукту
     if product_filter and product_filter != 'all':
         product_classes = get_product_classes()
-        # Ищем ключ продукта по названию или самому ключу
-        product_key = product_filter
-        for key, name in product_classes.items():
-            if name == product_filter or key == product_filter:
-                product_key = key
-                break
-        filtered_df = filtered_df[filtered_df['service_category'] == product_key]
+        # Находим русское название продукта по английскому ключу
+        russian_name = product_classes.get(product_filter, product_filter)
+        # Фильтруем по русскому названию, как в базе данных
+        filtered_df = filtered_df[filtered_df['service_category'] == russian_name]
     
     # Фильтр по периоду
     if period_filter:
@@ -759,10 +745,9 @@ def api_stats():
     product_filter = request.args.get('product')
     period_filter = request.args.get('period')
     
-    # Всегда используем только реальные данные
+    # Всегда используем только реальные данные из PostgreSQL
     df = load_dashboard_data_from_db()
     stats = calculate_dashboard_stats(df, product_filter, period_filter)
-    # Всегда используем реальные данные из БД
     
     return jsonify(stats)
 
