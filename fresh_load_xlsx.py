@@ -146,6 +146,7 @@ def clear_and_load_data():
                             company_code, company_url, bank_processed, scraped_page
                         )
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (review_id) DO NOTHING
                     """
                     
                     execute_batch(cursor, insert_query, records, page_size=500)
@@ -169,6 +170,7 @@ def clear_and_load_data():
                     company_code, company_url, bank_processed, scraped_page
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (review_id) DO NOTHING
             """
             
             execute_batch(cursor, insert_query, records, page_size=500)
