@@ -795,6 +795,57 @@
             background: white !important;
             visibility: visible !important;
         }
+        
+        /* Панель информации о фильтрах */
+        .filter-info-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(26, 54, 93, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #0ea5e9;
+        }
+        
+        .filter-info-content {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .current-filter, .current-period, .filter-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .filter-value {
+            font-weight: 700;
+            color: #1a365d;
+            background: rgba(14, 165, 233, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 767px) {
+            .filter-info-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            
+            .current-filter, .current-period, .filter-stats {
+                justify-content: space-between;
+            }
+        }
     </style>
 </head>
 <body>
@@ -937,7 +988,25 @@
     </div>
     
     <div class="main-content">
-        <div class="stats-grid">
+        <!-- Информация о текущем фильтре -->
+        <div class="filter-info-panel">
+            <div class="filter-info-content">
+                <div class="current-filter">
+                    <span class="filter-label">📊 Текущий фильтр:</span>
+                    <span id="current-product-filter" class="filter-value">Все продукты</span>
+                </div>
+                <div class="current-period">
+                    <span class="filter-label">📅 Период:</span>
+                    <span id="current-period-filter" class="filter-value">Все время</span>
+                </div>
+                <div class="filter-stats">
+                    <span class="filter-label">🔄 Последнее обновление:</span>
+                    <span id="last-update-time" class="filter-value">—</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-grid"></div>
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon total">📊</div>
@@ -1911,6 +1980,9 @@
                 totalBtn.innerHTML = '✓ Активно';
             }
             
+            // Обновляем информацию о фильтрах
+            updateFilterInfo('all', null);
+            
             // Получаем полную статистику
             const stats = await fetchStatsWithFilters();
             if (stats) {
@@ -1919,6 +1991,54 @@
             }
             
             console.log('✅ Показаны все отзывы');
+        }
+        
+        // Функция обновления информации о текущих фильтрах
+        function updateFilterInfo(productFilter, periodFilter) {
+            // Обновляем название продукта
+            const productElement = document.getElementById('current-product-filter');
+            if (productElement) {
+                if (!productFilter || productFilter === 'all') {
+                    productElement.textContent = 'Все продукты';
+                } else {
+                    // Находим название продукта из чипа
+                    const chip = document.querySelector(`[data-product="${productFilter}"]`);
+                    productElement.textContent = chip ? chip.textContent : productFilter;
+                }
+            }
+            
+            // Обновляем информацию о периоде
+            const periodElement = document.getElementById('current-period-filter');
+            if (periodElement) {
+                if (!periodFilter) {
+                    periodElement.textContent = 'Все время';
+                } else {
+                    // Формируем читаемое название периода
+                    if (periodFilter.includes('-Q')) {
+                        const [year, quarter] = periodFilter.split('-Q');
+                        const quarterNames = { '1': 'I кв.', '2': 'II кв.', '3': 'III кв.', '4': 'IV кв.' };
+                        periodElement.textContent = `${quarterNames[quarter]} ${year}`;
+                    } else if (periodFilter.length === 7) {
+                        // YYYY-MM формат
+                        const [year, month] = periodFilter.split('-');
+                        const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 
+                                          'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                        periodElement.textContent = `${monthNames[parseInt(month) - 1]} ${year}`;
+                    } else if (periodFilter.length === 4) {
+                        // YYYY формат
+                        periodElement.textContent = periodFilter + ' год';
+                    } else {
+                        periodElement.textContent = periodFilter;
+                    }
+                }
+            }
+            
+            // Обновляем время последнего обновления
+            const updateTimeElement = document.getElementById('last-update-time');
+            if (updateTimeElement) {
+                const now = new Date();
+                updateTimeElement.textContent = now.toLocaleTimeString('ru-RU');
+            }
         }
         
         // Функция фильтрации графика по продукту
@@ -1939,6 +2059,9 @@
                 btn.style.background = 'linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%)';
                 btn.textContent = 'Показать';
             });
+            
+            // Обновляем информацию о фильтрах
+            updateFilterInfo(productType, currentPeriodFilter);
             
             // Получаем обновленную статистику с сервера
             const stats = await fetchStatsWithFilters(productType, currentPeriodFilter);
@@ -2107,6 +2230,9 @@
                         document.getElementById('quarter-select').value = '';
                     }
                     
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
+                    
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
                     if (stats) {
@@ -2130,6 +2256,9 @@
                         document.getElementById('quarter-select').value = '';
                     }
                     
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
+                    
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
                     if (stats) {
@@ -2152,6 +2281,9 @@
                         document.getElementById('month-select').value = '';
                         document.getElementById('year-select').value = '';
                     }
+                    
+                    // Обновляем информацию о фильтрах
+                    updateFilterInfo(currentProductFilter, currentPeriodFilter);
                     
                     // Получаем обновленную статистику
                     const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);

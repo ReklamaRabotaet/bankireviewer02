@@ -14,9 +14,18 @@ import numpy as np
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import psycopg2.pool
+from functools import lru_cache
+import time
 
 # Create Flask app with proper configuration
 app = Flask(__name__)
+
+# Кеш для данных
+_data_cache = {
+    'data': None,
+    'timestamp': 0,
+    'cache_duration': 60  # Кешируем на 60 секунд
+}
 
 # Configure Flask for production
 app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'fallback-secret-key-for-development')
@@ -260,7 +269,14 @@ def mock_ml_analysis(texts):
 
 # Загрузка данных для дашборда
 def load_dashboard_data_from_db():
-    """Загрузка данных для отображения в дашборде из PostgreSQL"""
+    """Загрузка данных для отображения в дашборде из PostgreSQL с кешированием"""
+    
+    # Проверяем кеш
+    current_time = time.time()
+    if (_data_cache['data'] is not None and 
+        current_time - _data_cache['timestamp'] < _data_cache['cache_duration']):
+        print("📊 Используем кешированные данные")
+        return _data_cache['data']
     
     # Сначала убеждаемся что схема существует
     ensure_database_schema()
@@ -299,11 +315,17 @@ def load_dashboard_data_from_db():
             """)
             
             rows = cur.fetchall()
+            print(f"📊 Загружено из БД: {len(rows)} записей")
             
             # Конвертируем в DataFrame
             df = pd.DataFrame(rows)
             if len(df) > 0:
                 df['dateCreate'] = pd.to_datetime(df['dateCreate'])
+            
+            # Обновляем кеш
+            _data_cache['data'] = df
+            _data_cache['timestamp'] = current_time
+            print(f"💾 Данные кешированы на {_data_cache['cache_duration']} секунд")
                 
             return df
             
@@ -376,6 +398,8 @@ def create_minimal_fallback_data():
 # Расчет статистики для дашборда
 def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
     """Расчет статистики для дашборда с поддержкой фильтрации"""
+    
+    print(f"🌐 API запрос: product={product_filter}, period={period_filter}")
     
     # Применяем фильтры
     filtered_df = df.copy()
@@ -511,6 +535,8 @@ def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
     category_stats = []
     product_classes = get_product_classes()
     
+    print(f"📋 Категории в данных: {list(df['service_category'].unique())}")
+    
     # Если фильтр по продукту НЕ установлен, показываем все категории
     if not product_filter or product_filter == 'all':
         for category in df['service_category'].unique():
@@ -638,7 +664,7 @@ def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
         # Переходим к следующему месяцу
         current_date = next_month
     
-    return {
+    result = {
         'total_reviews': total_reviews,
         'positive_percent': round(positive, 1),
         'neutral_percent': round(neutral, 1),
@@ -650,6 +676,9 @@ def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
         'category_stats': category_stats,
         'monthly_stats': monthly_stats
     }
+    
+    print(f"📈 Результат статистики: total_reviews={total_reviews}")
+    return result
 
 @app.route('/')
 def dashboard():
