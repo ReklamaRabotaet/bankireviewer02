@@ -228,7 +228,8 @@ def load_dashboard_data_from_db():
             cur.execute("SELECT COUNT(*) as count FROM reviews")
             count = cur.fetchone()['count']
             
-            if count == 0:
+            # Временно отключена автогенерация mock данных для миграции реальных данных
+            if False:  # count == 0:
                 print("🔄 База пустая, создаем образец данных...")
                 populate_sample_data()
                 # Повторно считываем после создания данных
