@@ -347,14 +347,32 @@ def calculate_dashboard_stats(df):
     total_reviews = len(df)
     
     # Проверка пустого DataFrame или отсутствия колонок
-    if total_reviews == 0 or df.empty or 'grade' not in df.columns:
+    if total_reviews == 0 or df.empty:
         return {
             'total_reviews': 0,
             'avg_rating': 0.0,
-            'sentiment_distribution': {'positive': 0, 'neutral': 0, 'negative': 0},
+            'positive_percent': 0.0,
+            'neutral_percent': 0.0,
+            'negative_percent': 0.0,
             'category_stats': [],
-            'monthly_trends': [],
-            'volume_data': []
+            'monthly_stats': []
+        }
+    
+    # Проверяем наличие нужных колонок
+    required_columns = ['grade', 'service_category', 'dateCreate']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    
+    if missing_columns:
+        print(f"⚠️ Отсутствуют колонки: {missing_columns}")
+        print(f"📋 Доступные колонки: {list(df.columns)}")
+        return {
+            'total_reviews': total_reviews,
+            'avg_rating': 0.0,
+            'positive_percent': 0.0,
+            'neutral_percent': 0.0,
+            'negative_percent': 0.0,
+            'category_stats': [],
+            'monthly_stats': []
         }
     
     # Распределение по тональности (на основе рейтинга)
