@@ -944,7 +944,10 @@
                     <div>
                         <div class="stat-value">{{ "{:,}".format(stats.total_reviews) if stats.total_reviews > 0 else "—" }}</div>
                         <div class="stat-label">Всего отзывов</div>
-                        <div class="stat-change positive">↗ 12.3% к предыдущему периоду</div>
+                        <div class="stat-change {{ 'positive' if stats.total_change > 0 else 'negative' if stats.total_change < 0 else '' }}">
+                            {{ '↗' if stats.total_change > 0 else '↘' if stats.total_change < 0 else '→' }} 
+                            {{ "{:+.1f}".format(stats.total_change) if stats.total_change != 0 else "0.0" }}% к предыдущему периоду
+                        </div>
                         <button class="sentiment-show-btn" onclick="showAllReviews()">Показать</button>
                     </div>
                 </div>
@@ -956,7 +959,10 @@
                     <div>
                         <div class="stat-value">{{ stats.positive_percent if stats.total_reviews > 0 else "—" }}{{ "%" if stats.total_reviews > 0 else "" }}</div>
                         <div class="stat-label">Положительные настроения</div>
-                        <div class="stat-change positive">↗ 3.2% к предыдущему периоду</div>
+                        <div class="stat-change {{ 'positive' if stats.positive_change > 0 else 'negative' if stats.positive_change < 0 else '' }}">
+                            {{ '↗' if stats.positive_change > 0 else '↘' if stats.positive_change < 0 else '→' }} 
+                            {{ "{:+.1f}".format(stats.positive_change) if stats.positive_change != 0 else "0.0" }}% к предыдущему периоду
+                        </div>
                         <button class="sentiment-show-btn" onclick="filterBySentiment('positive')">Показать</button>
                     </div>
                 </div>
@@ -968,7 +974,10 @@
                     <div>
                         <div class="stat-value">{{ stats.neutral_percent if stats.total_reviews > 0 else "—" }}{{ "%" if stats.total_reviews > 0 else "" }}</div>
                         <div class="stat-label">Нейтральные настроения</div>
-                        <div class="stat-change negative">↘ 1.4% к предыдущему периоду</div>
+                        <div class="stat-change {{ 'positive' if stats.neutral_change > 0 else 'negative' if stats.neutral_change < 0 else '' }}">
+                            {{ '↗' if stats.neutral_change > 0 else '↘' if stats.neutral_change < 0 else '→' }} 
+                            {{ "{:+.1f}".format(stats.neutral_change) if stats.neutral_change != 0 else "0.0" }}% к предыдущему периоду
+                        </div>
                         <button class="sentiment-show-btn" onclick="filterBySentiment('neutral')">Показать</button>
                     </div>
                 </div>
@@ -980,7 +989,10 @@
                     <div>
                         <div class="stat-value">{{ stats.negative_percent if stats.total_reviews > 0 else "—" }}{{ "%" if stats.total_reviews > 0 else "" }}</div>
                         <div class="stat-label">Отрицательные настроения</div>
-                        <div class="stat-change negative">↘ 1.8% к предыдущему периоду</div>
+                        <div class="stat-change {{ 'positive' if stats.negative_change > 0 else 'negative' if stats.negative_change < 0 else '' }}">
+                            {{ '↗' if stats.negative_change > 0 else '↘' if stats.negative_change < 0 else '→' }} 
+                            {{ "{:+.1f}".format(stats.negative_change) if stats.negative_change != 0 else "0.0" }}% к предыдущему периоду
+                        </div>
                         <button class="sentiment-show-btn" onclick="filterBySentiment('negative')">Показать</button>
                     </div>
                 </div>
@@ -1143,20 +1155,45 @@
             }
         }
         
-        // Автообновление статистики каждые 30 секунд
-        setInterval(async () => {
+        // Глобальные переменные для текущих фильтров
+        let currentProductFilter = 'all';
+        let currentPeriodFilter = null;
+        
+        // Функция получения статистики с фильтрами
+        async function fetchStatsWithFilters(productFilter = null, periodFilter = null) {
             try {
-                const response = await fetch('/api/stats');
+                let url = '/api/stats';
+                const params = new URLSearchParams();
+                
+                if (productFilter && productFilter !== 'all') {
+                    params.append('product', productFilter);
+                }
+                if (periodFilter) {
+                    params.append('period', periodFilter);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url);
                 const stats = await response.json();
-                // Здесь можно обновить данные на странице
                 console.log('Статистика обновлена:', stats);
                 
                 // Обновляем графики
-                updateTrendsChart(stats.monthly_stats || []);
-                updateVolumeChart(stats.monthly_stats || []);
+                updateTrendsChart(stats.monthly_stats || [], null, productFilter);
+                updateVolumeChart(stats.monthly_stats || [], null, productFilter);
+                
+                return stats;
             } catch (error) {
-                console.error('Ошибка обновления статистики:', error);
+                console.error('Ошибка получения статистики:', error);
+                return null;
             }
+        }
+        
+        // Автообновление статистики каждые 30 секунд
+        setInterval(async () => {
+            await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
         }, 30000);
         
         // Mock переключатель убран - всегда используем реальные данные
@@ -1730,17 +1767,138 @@
         let cachedMonthlyStats = [];
         let cachedCategoryStats = [];
         
+        // Функции обновления DOM элементов
+        function updateStatsCards(stats) {
+            // Обновляем значения в карточках статистики
+            const cards = document.querySelectorAll('.stat-card');
+            
+            // Всего отзывов
+            if (cards[0]) {
+                const valueEl = cards[0].querySelector('.stat-value');
+                const changeEl = cards[0].querySelector('.stat-change');
+                if (valueEl) valueEl.textContent = stats.total_reviews > 0 ? stats.total_reviews.toLocaleString() : '—';
+                if (changeEl) {
+                    const change = stats.total_change || 0;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : ''}`;
+                    changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
+                }
+            }
+            
+            // Положительные
+            if (cards[1]) {
+                const valueEl = cards[1].querySelector('.stat-value');
+                const changeEl = cards[1].querySelector('.stat-change');
+                if (valueEl) valueEl.textContent = stats.total_reviews > 0 ? `${stats.positive_percent}%` : '—';
+                if (changeEl) {
+                    const change = stats.positive_change || 0;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : ''}`;
+                    changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
+                }
+            }
+            
+            // Нейтральные
+            if (cards[2]) {
+                const valueEl = cards[2].querySelector('.stat-value');
+                const changeEl = cards[2].querySelector('.stat-change');
+                if (valueEl) valueEl.textContent = stats.total_reviews > 0 ? `${stats.neutral_percent}%` : '—';
+                if (changeEl) {
+                    const change = stats.neutral_change || 0;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : ''}`;
+                    changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
+                }
+            }
+            
+            // Отрицательные
+            if (cards[3]) {
+                const valueEl = cards[3].querySelector('.stat-value');
+                const changeEl = cards[3].querySelector('.stat-change');
+                if (valueEl) valueEl.textContent = stats.total_reviews > 0 ? `${stats.negative_percent}%` : '—';
+                if (changeEl) {
+                    const change = stats.negative_change || 0;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : change < 0 ? 'negative' : ''}`;
+                    changeEl.innerHTML = `${change > 0 ? '↗' : change < 0 ? '↘' : '→'} ${change >= 0 ? '+' : ''}${change.toFixed(1)}% к предыдущему периоду`;
+                }
+            }
+        }
+        
+        function updateProductsSection(stats) {
+            // Обновляем секцию продуктов
+            const productsSection = document.querySelector('.products-section');
+            if (!productsSection || !stats.category_stats) return;
+            
+            // Генерируем новую разметку продуктов
+            let productsHTML = '';
+            stats.category_stats.forEach(product => {
+                const icon = getProductIcon(product.category_key, product.name);
+                productsHTML += `
+                    <div class="product-item" data-category="${product.category_key || product.name}">
+                        <div class="product-icon">${icon}</div>
+                        <div class="product-info">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-count">${product.total.toLocaleString()} всего отзывов</div>
+                        </div>
+                        <div class="sentiment-bar">
+                            <div class="sentiment-values">
+                                <span class="sentiment-positive">${product.positive}%</span>
+                                <span class="sentiment-neutral">${product.neutral}%</span>
+                                <span class="sentiment-negative">${product.negative}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-segment progress-positive" style="width: ${product.positive}%"></div>
+                                <div class="progress-segment progress-neutral" style="width: ${product.neutral}%"></div>
+                                <div class="progress-segment progress-negative" style="width: ${product.negative}%"></div>
+                            </div>
+                        </div>
+                        <div class="product-rating">
+                            Общий балл: <span class="rating-value">${product.avg_rating}/5</span><br>
+                            <small>Обновлено: ${new Date().toLocaleString('ru-RU')}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Обновляем содержимое секции продуктов
+            const existingItems = productsSection.querySelectorAll('.product-item');
+            existingItems.forEach(item => item.remove());
+            
+            const sectionHeader = productsSection.querySelector('.section-header');
+            if (sectionHeader) {
+                sectionHeader.insertAdjacentHTML('afterend', productsHTML);
+            }
+        }
+        
+        function getProductIcon(categoryKey, name) {
+            if (categoryKey === 'debet_cards' || name.toLowerCase().includes('дебетов')) return '💳';
+            if (categoryKey === 'credit_cards' || name.toLowerCase().includes('кредитн')) return '💳';
+            if (categoryKey === 'hypothec' || name.toLowerCase().includes('ипотек')) return '🏠';
+            if (categoryKey === 'mobile_app' || name.toLowerCase().includes('приложен')) return '📱';
+            if (categoryKey === 'deposits' || name.toLowerCase().includes('вклад')) return '💰';
+            if (categoryKey === 'auto_credit' || name.toLowerCase().includes('авто')) return '🚗';
+            if (categoryKey === 'consumer_credit' || name.toLowerCase().includes('потребител')) return '💳';
+            if (categoryKey === 'money_transfer' || name.toLowerCase().includes('перевод')) return '💸';
+            return '🏦';
+        }
+        
         // Функция показа всех отзывов (сброс всех фильтров)
-        function showAllReviews() {
+        async function showAllReviews() {
             console.log('🎯 Показать все отзывы');
             
-            // Сброс фильтров продуктов
+            // Сброс фильтров
+            currentProductFilter = 'all';
+            currentPeriodFilter = null;
+            
+            // Сброс UI фильтров продуктов
             document.querySelectorAll('.chip:not(.show-more)').forEach(chip => {
                 chip.classList.remove('active');
             });
             document.querySelector('[data-product="all"]').classList.add('active');
             
-            // Сброс фильтров настроений (включая кнопку "Всего отзывов")
+            // Сброс фильтров периода
+            document.getElementById('month-select').value = '';
+            document.getElementById('year-select').value = '';
+            document.getElementById('quarter-select').value = '';
+            
+            // Сброс фильтров настроений
             document.querySelectorAll('.sentiment-show-btn').forEach(btn => {
                 btn.style.background = 'linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%)';
                 btn.textContent = 'Показать';
@@ -1748,21 +1906,27 @@
             
             // Активируем кнопку "Показать" для всех отзывов
             const totalBtn = document.querySelector('.stat-card:first-child .sentiment-show-btn');
-            totalBtn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
-            totalBtn.innerHTML = '✓ Активно';
+            if (totalBtn) {
+                totalBtn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+                totalBtn.innerHTML = '✓ Активно';
+            }
             
-            // Обновляем графики без фильтров
-            if (window.currentStats && window.currentStats.monthly_stats) {
-                updateTrendsChart(window.currentStats.monthly_stats, null, null);
-                updateVolumeChart(window.currentStats.monthly_stats, null, null);
+            // Получаем полную статистику
+            const stats = await fetchStatsWithFilters();
+            if (stats) {
+                updateStatsCards(stats);
+                updateProductsSection(stats);
             }
             
             console.log('✅ Показаны все отзывы');
         }
         
         // Функция фильтрации графика по продукту
-        function filterByProduct(productType) {
+        async function filterByProduct(productType) {
             console.log('🎯 Фильтруем график по продукту:', productType);
+            
+            // Сохраняем текущий фильтр
+            currentProductFilter = productType;
             
             // Обновляем активный чип
             document.querySelectorAll('.chip:not(.show-more)').forEach(chip => {
@@ -1776,13 +1940,17 @@
                 btn.textContent = 'Показать';
             });
             
-            // Фильтруем данные по продукту и обновляем все графики
-            if (cachedMonthlyStats.length > 0) {
-                updateTrendsChart(cachedMonthlyStats, null, productType);
-                updateVolumeChart(cachedMonthlyStats, null, productType);
-                console.log('✅ График обновлён для продукта:', productType);
+            // Получаем обновленную статистику с сервера
+            const stats = await fetchStatsWithFilters(productType, currentPeriodFilter);
+            
+            if (stats) {
+                // Обновляем карточки статистики
+                updateStatsCards(stats);
+                // Обновляем секцию продуктов
+                updateProductsSection(stats);
+                console.log('✅ Статистика обновлена для продукта:', productType);
             } else {
-                console.warn('⚠️ Нет данных для фильтрации');
+                console.warn('⚠️ Не удалось получить статистику');
             }
         }
         
@@ -1928,16 +2096,22 @@
             // Месяц
             const monthSelect = document.getElementById('month-select');
             if (monthSelect) {
-                monthSelect.addEventListener('change', function() {
+                monthSelect.addEventListener('change', async function() {
                     const selectedMonth = this.value;
                     console.log('📅 Выбран месяц:', selectedMonth);
+                    currentPeriodFilter = selectedMonth || null;
+                    
                     if (selectedMonth) {
-                        filterDataByMonth(selectedMonth);
                         // Сброс других фильтров
                         document.getElementById('year-select').value = '';
                         document.getElementById('quarter-select').value = '';
-                    } else {
-                        resetToAllData();
+                    }
+                    
+                    // Получаем обновленную статистику
+                    const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
+                    if (stats) {
+                        updateStatsCards(stats);
+                        updateProductsSection(stats);
                     }
                 });
             }
@@ -1945,16 +2119,22 @@
             // Год
             const yearSelect = document.getElementById('year-select');
             if (yearSelect) {
-                yearSelect.addEventListener('change', function() {
+                yearSelect.addEventListener('change', async function() {
                     const selectedYear = this.value;
                     console.log('📅 Выбран год:', selectedYear);
+                    currentPeriodFilter = selectedYear || null;
+                    
                     if (selectedYear) {
-                        filterDataByYear(selectedYear);
                         // Сброс других фильтров
                         document.getElementById('month-select').value = '';
                         document.getElementById('quarter-select').value = '';
-                    } else {
-                        resetToAllData();
+                    }
+                    
+                    // Получаем обновленную статистику
+                    const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
+                    if (stats) {
+                        updateStatsCards(stats);
+                        updateProductsSection(stats);
                     }
                 });
             }
@@ -1962,16 +2142,22 @@
             // Квартал
             const quarterSelect = document.getElementById('quarter-select');
             if (quarterSelect) {
-                quarterSelect.addEventListener('change', function() {
+                quarterSelect.addEventListener('change', async function() {
                     const selectedQuarter = this.value;
                     console.log('📅 Выбран квартал:', selectedQuarter);
+                    currentPeriodFilter = selectedQuarter || null;
+                    
                     if (selectedQuarter) {
-                        filterDataByQuarter(selectedQuarter);
                         // Сброс других фильтров
                         document.getElementById('month-select').value = '';
                         document.getElementById('year-select').value = '';
-                    } else {
-                        resetToAllData();
+                    }
+                    
+                    // Получаем обновленную статистику
+                    const stats = await fetchStatsWithFilters(currentProductFilter, currentPeriodFilter);
+                    if (stats) {
+                        updateStatsCards(stats);
+                        updateProductsSection(stats);
                     }
                 });
             }

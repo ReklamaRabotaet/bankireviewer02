@@ -385,72 +385,217 @@ def create_minimal_fallback_data():
     return pd.DataFrame(data)
 
 # Расчет статистики для дашборда
-def calculate_dashboard_stats(df):
-    """Расчет статистики для дашборда"""
+def calculate_dashboard_stats(df, product_filter=None, period_filter=None):
+    """Расчет статистики для дашборда с поддержкой фильтрации"""
+    
+    # Применяем фильтры
+    filtered_df = df.copy()
+    
+    # Фильтр по продукту
+    if product_filter and product_filter != 'all':
+        product_classes = get_product_classes()
+        # Ищем ключ продукта по названию или самому ключу
+        product_key = product_filter
+        for key, name in product_classes.items():
+            if name == product_filter or key == product_filter:
+                product_key = key
+                break
+        filtered_df = filtered_df[filtered_df['service_category'] == product_key]
+    
+    # Фильтр по периоду
+    if period_filter:
+        filtered_df['date'] = pd.to_datetime(filtered_df['dateCreate'])
+        current_date = datetime.now()
+        
+        if period_filter.startswith('2024-') or period_filter.startswith('2025-'):
+            # Фильтр по месяцу (YYYY-MM)
+            if len(period_filter) == 7:
+                year, month = period_filter.split('-')
+                filtered_df = filtered_df[
+                    (filtered_df['date'].dt.year == int(year)) & 
+                    (filtered_df['date'].dt.month == int(month))
+                ]
+            # Фильтр по году (YYYY)
+            elif len(period_filter) == 4:
+                filtered_df = filtered_df[filtered_df['date'].dt.year == int(period_filter)]
+        elif 'Q' in period_filter:
+            # Фильтр по кварталу (YYYY-QX)
+            year, quarter = period_filter.split('-Q')
+            quarter_months = {
+                '1': [1, 2, 3],
+                '2': [4, 5, 6], 
+                '3': [7, 8, 9],
+                '4': [10, 11, 12]
+            }
+            if quarter in quarter_months:
+                filtered_df = filtered_df[
+                    (filtered_df['date'].dt.year == int(year)) & 
+                    (filtered_df['date'].dt.month.isin(quarter_months[quarter]))
+                ]
     
     # Общая статистика
-    total_reviews = len(df)
+    total_reviews = len(filtered_df)
     
     # Проверка пустого DataFrame или отсутствия колонок
-    if total_reviews == 0 or df.empty:
+    if total_reviews == 0 or filtered_df.empty:
         return {
             'total_reviews': 0,
             'avg_rating': 0.0,
             'positive_percent': 0.0,
             'neutral_percent': 0.0,
             'negative_percent': 0.0,
+            'positive_change': 0.0,
+            'neutral_change': 0.0,
+            'negative_change': 0.0,
+            'total_change': 0.0,
             'category_stats': [],
             'monthly_stats': []
         }
     
     # Проверяем наличие нужных колонок
     required_columns = ['grade', 'service_category', 'dateCreate']
-    missing_columns = [col for col in required_columns if col not in df.columns]
+    missing_columns = [col for col in required_columns if col not in filtered_df.columns]
     
     if missing_columns:
         print(f"⚠️ Отсутствуют колонки: {missing_columns}")
-        print(f"📋 Доступные колонки: {list(df.columns)}")
+        print(f"📋 Доступные колонки: {list(filtered_df.columns)}")
         return {
             'total_reviews': total_reviews,
             'avg_rating': 0.0,
             'positive_percent': 0.0,
             'neutral_percent': 0.0,
             'negative_percent': 0.0,
+            'positive_change': 0.0,
+            'neutral_change': 0.0, 
+            'negative_change': 0.0,
+            'total_change': 0.0,
             'category_stats': [],
             'monthly_stats': []
         }
     
     # Распределение по тональности (на основе рейтинга)
-    positive = len(df[df['grade'] >= 4]) / total_reviews * 100
-    neutral = len(df[df['grade'] == 3]) / total_reviews * 100
-    negative = len(df[df['grade'] <= 2]) / total_reviews * 100
+    positive = len(filtered_df[filtered_df['grade'] >= 4]) / total_reviews * 100 if total_reviews > 0 else 0
+    neutral = len(filtered_df[filtered_df['grade'] == 3]) / total_reviews * 100 if total_reviews > 0 else 0
+    negative = len(filtered_df[filtered_df['grade'] <= 2]) / total_reviews * 100 if total_reviews > 0 else 0
+    
+    # Расчет изменений к предыдущему периоду
+    filtered_df['date'] = pd.to_datetime(filtered_df['dateCreate'])
+    current_date = datetime.now()
+    
+    # Определяем период для сравнения (30 дней назад)
+    previous_period_start = current_date - timedelta(days=60)
+    previous_period_end = current_date - timedelta(days=30)
+    current_period_start = current_date - timedelta(days=30)
+    
+    # Данные за предыдущий период
+    prev_df = filtered_df[
+        (filtered_df['date'] >= previous_period_start) & 
+        (filtered_df['date'] < previous_period_end)
+    ]
+    
+    # Данные за текущий период  
+    curr_df = filtered_df[
+        (filtered_df['date'] >= current_period_start)
+    ]
+    
+    # Расчет изменений
+    def calculate_change(current_count, previous_count):
+        if previous_count == 0:
+            return 0.0 if current_count == 0 else 100.0
+        return ((current_count - previous_count) / previous_count) * 100
+    
+    prev_total = len(prev_df)
+    curr_total = len(curr_df)
+    
+    prev_positive = len(prev_df[prev_df['grade'] >= 4]) / prev_total * 100 if prev_total > 0 else 0
+    curr_positive = len(curr_df[curr_df['grade'] >= 4]) / curr_total * 100 if curr_total > 0 else 0
+    
+    prev_neutral = len(prev_df[prev_df['grade'] == 3]) / prev_total * 100 if prev_total > 0 else 0
+    curr_neutral = len(curr_df[curr_df['grade'] == 3]) / curr_total * 100 if curr_total > 0 else 0
+    
+    prev_negative = len(prev_df[prev_df['grade'] <= 2]) / prev_total * 100 if prev_total > 0 else 0
+    curr_negative = len(curr_df[curr_df['grade'] <= 2]) / curr_total * 100 if curr_total > 0 else 0
+    
+    positive_change = calculate_change(curr_positive, prev_positive)
+    neutral_change = calculate_change(curr_neutral, prev_neutral)
+    negative_change = calculate_change(curr_negative, prev_negative)
+    total_change = calculate_change(curr_total, prev_total)
     
     # Статистика по категориям (используем таблицы classes)
     category_stats = []
     product_classes = get_product_classes()
     
-    for category in df['service_category'].unique():
-        if category == 'all':  # Пропускаем категорию "all"
-            continue
-        cat_df = df[df['service_category'] == category]
-        
-        # Пропускаем пустые категории
-        if len(cat_df) == 0:
-            continue
+    # Если фильтр по продукту НЕ установлен, показываем все категории
+    if not product_filter or product_filter == 'all':
+        for category in df['service_category'].unique():
+            if category == 'all':  # Пропускаем категорию "all"
+                continue
+            cat_df = df[df['service_category'] == category]
             
-        cat_positive = len(cat_df[cat_df['grade'] >= 4]) / len(cat_df) * 100
-        cat_neutral = len(cat_df[cat_df['grade'] == 3]) / len(cat_df) * 100
-        cat_negative = len(cat_df[cat_df['grade'] <= 2]) / len(cat_df) * 100
+            # Применяем фильтр по периоду если есть
+            if period_filter:
+                cat_df['date'] = pd.to_datetime(cat_df['dateCreate'])
+                if period_filter.startswith('2024-') or period_filter.startswith('2025-'):
+                    if len(period_filter) == 7:
+                        year, month = period_filter.split('-')
+                        cat_df = cat_df[
+                            (cat_df['date'].dt.year == int(year)) & 
+                            (cat_df['date'].dt.month == int(month))
+                        ]
+                    elif len(period_filter) == 4:
+                        cat_df = cat_df[cat_df['date'].dt.year == int(period_filter)]
+                elif 'Q' in period_filter:
+                    year, quarter = period_filter.split('-Q')
+                    quarter_months = {
+                        '1': [1, 2, 3], '2': [4, 5, 6], 
+                        '3': [7, 8, 9], '4': [10, 11, 12]
+                    }
+                    if quarter in quarter_months:
+                        cat_df = cat_df[
+                            (cat_df['date'].dt.year == int(year)) & 
+                            (cat_df['date'].dt.month.isin(quarter_months[quarter]))
+                        ]
+            
+            # Пропускаем пустые категории
+            if len(cat_df) == 0:
+                continue
+                
+            cat_positive = len(cat_df[cat_df['grade'] >= 4]) / len(cat_df) * 100
+            cat_neutral = len(cat_df[cat_df['grade'] == 3]) / len(cat_df) * 100
+            cat_negative = len(cat_df[cat_df['grade'] <= 2]) / len(cat_df) * 100
+            
+            category_stats.append({
+                'name': product_classes.get(category, category),
+                'category_key': category,  # Добавляем ключ для фильтрации
+                'total': len(cat_df),
+                'positive': round(cat_positive, 1),
+                'neutral': round(cat_neutral, 1),
+                'negative': round(cat_negative, 1),
+                'avg_rating': round(cat_df['grade'].mean(), 1)
+            })
+    else:
+        # Если установлен фильтр по продукту, показываем только эту категорию
+        product_key = product_filter
+        for key, name in product_classes.items():
+            if name == product_filter or key == product_filter:
+                product_key = key
+                break
         
-        category_stats.append({
-            'name': product_classes.get(category, category),
-            'category_key': category,  # Добавляем ключ для фильтрации
-            'total': len(cat_df),
-            'positive': round(cat_positive, 1),
-            'neutral': round(cat_neutral, 1),
-            'negative': round(cat_negative, 1),
-            'avg_rating': round(cat_df['grade'].mean(), 1)
-        })
+        cat_df = filtered_df  # Уже отфильтрованные данные
+        if len(cat_df) > 0:
+            cat_positive = len(cat_df[cat_df['grade'] >= 4]) / len(cat_df) * 100
+            cat_neutral = len(cat_df[cat_df['grade'] == 3]) / len(cat_df) * 100
+            cat_negative = len(cat_df[cat_df['grade'] <= 2]) / len(cat_df) * 100
+            
+            category_stats.append({
+                'name': product_classes.get(product_key, product_key),
+                'category_key': product_key,
+                'total': len(cat_df),
+                'positive': round(cat_positive, 1),
+                'neutral': round(cat_neutral, 1),
+                'negative': round(cat_negative, 1),
+                'avg_rating': round(cat_df['grade'].mean(), 1)
+            })
     
     # Сортируем по количеству отзывов
     category_stats.sort(key=lambda x: x['total'], reverse=True)
@@ -512,6 +657,10 @@ def calculate_dashboard_stats(df):
         'positive_percent': round(positive, 1),
         'neutral_percent': round(neutral, 1),
         'negative_percent': round(negative, 1),
+        'positive_change': round(positive_change, 1),
+        'neutral_change': round(neutral_change, 1),
+        'negative_change': round(negative_change, 1),
+        'total_change': round(total_change, 1),
         'category_stats': category_stats,
         'monthly_stats': monthly_stats
     }
@@ -606,9 +755,13 @@ def analyze_reviews():
 def api_stats():
     """API endpoint для получения статистики"""
     
+    # Получаем параметры фильтрации
+    product_filter = request.args.get('product')
+    period_filter = request.args.get('period')
+    
     # Всегда используем только реальные данные
     df = load_dashboard_data_from_db()
-    stats = calculate_dashboard_stats(df)
+    stats = calculate_dashboard_stats(df, product_filter, period_filter)
     # Всегда используем реальные данные из БД
     
     return jsonify(stats)
